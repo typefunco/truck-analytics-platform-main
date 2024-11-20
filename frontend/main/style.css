@@ -1,0 +1,261 @@
+* {
+    padding: 0;
+    margin: 0;
+    border: 0;
+}
+*,
+*:before,
+*:after {
+    -moz-box-sizing: border-box;
+    -webkit-box-sizing: border-box;
+    box-sizing: border-box;
+}
+:focus,
+:active {
+    outline: none;
+}
+a:focus,
+a:active {
+    outline: none;
+}
+
+nav,
+footer,
+header,
+aside {
+    display: block;
+}
+
+html,
+body {
+    height: 100%;
+    width: 100%;
+    font-size: 100%;
+    line-height: 1;
+    font-size: 14px;
+    -ms-text-size-adjust: 100%;
+    -moz-text-size-adjust: 100%;
+    -webkit-text-size-adjust: 100%;
+}
+input,
+button,
+textarea {
+    font-family: inherit;
+}
+
+input::-ms-clear {
+    display: none;
+}
+button {
+    cursor: pointer;
+}
+button::-moz-focus-inner {
+    padding: 0;
+    border: 0;
+}
+a,
+a:visited {
+    text-decoration: none;
+}
+a:hover {
+    text-decoration: none;
+}
+ul li {
+    list-style: none;
+}
+img {
+    vertical-align: top;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    font-size: inherit;
+    font-weight: 400;
+}
+
+@import url("https://fonts.googleapis.com/css2?family=Montserrat:wght@100..900&display=swap");
+
+html,
+body {
+    font-family: "Montserrat", sans-serif;
+    background-color: #171f35;
+}
+
+.container {
+    max-width: 1770px;
+    padding: 0 20px;
+    margin: 0 auto;
+}
+.header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-top: 30px;
+    padding-bottom: 30px;
+}
+.header__logo {
+    font-size: 48px;
+    font-weight: 700;
+    color: #7aa0ff;
+}
+.header__auth {
+    display: flex;
+    align-items: center;
+    background-color: #d9d9d9;
+    border-radius: 24px;
+    gap: 13px;
+    padding: 0 8px;
+}
+.header__auth-svgs {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+.header__auth-svgs svg {
+    cursor: pointer;
+}
+.header__auth-user {
+    display: flex;
+    align-items: center;
+}
+.header__auth-user-text {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+.header__auth-user-text h2 {
+    font-size: 36px;
+    font-weight: 500;
+}
+.header__auth-user-text p {
+    font-size: 16px;
+    font-weight: 300;
+    margin-top: 10px;
+}
+.header__title {
+    font-size: 48px;
+    font-weight: 900;
+    color: white;
+}
+
+.filter {
+    color: white;
+    margin-top: 30px;
+}
+.filter__title {
+    font-size: 40px;
+    font-weight: 700;
+    text-align: center;
+    margin-bottom: 32px;
+}
+.filter__form {
+    background-color: #252e50;
+    border-radius: 48px;
+    padding: 30px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 50px;
+}
+.filter__form-content {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+}
+.filter__form-item h5 {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+.filter__form-item h5 p {
+    font-size: 32px;
+    font-weight: 500;
+}
+.filter__form-item {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    align-items: center;
+}
+.filter__form-item > div {
+    display: flex;
+    flex-direction: column;
+    align-items: start;
+    gap: 10px;
+}
+.filter__form-item > div > label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 28px;
+    font-weight: 500;
+}
+.filter__form-item input {
+    width: 20px;
+    height: 20px;
+}
+.filter__form-period {
+    width: 200px;
+}
+.filter__form-period > div {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+}
+.filter__form-period > div span {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    background-color: #d9d9d9;
+    color: black;
+    font-size: 20px;
+    border-radius: 50%;
+    cursor: pointer;
+}
+.filter-btn {
+    width: 300px;
+    height: 75px;
+    background-color: #2db13d;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 24px;
+}
+.filter-btn p {
+    font-size: 36px;
+    font-weight: 700;
+    margin-right: 10px;
+    color: white;
+}
+
+/* .filter__form-truck-type,
+.filter__form-axle-type,
+.filter__form-regions,
+.filter__form-period,
+.filter-btn {
+    transition: all 0.5s;
+    transform: scale(0.5);
+    opacity: 0;
+}
+.filter__form-truck-type.activeForm,
+.filter__form-axle-type.activeForm,
+.filter__form-regions.activeForm,
+.filter__form-period.activeForm,
+.filter-btn.activeForm {
+    transform: scale(1);
+    opacity: 1;
+} */
+
+.activeSpan {
+    background-color: #5564a5;
+    color: white;
+}
+.filter__form-period {
+    visibility: hidden !important;
+}

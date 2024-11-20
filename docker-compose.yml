@@ -1,0 +1,31 @@
+services:
+  db:
+    image: postgres:14
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: truck-analytics
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./data_dump.sql:/docker-entrypoint-initdb.d/data_dump.sql
+    ports:
+      - "5432:5432"
+
+  app:
+    build:
+      context: .
+      dockerfile: app.dockerfile
+    depends_on:
+      - db
+    environment:
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      DB_NAME: truck-analytics
+    ports:
+      - "8080:8080"
+    command: ["./analytics-platform"]
+
+volumes:
+  pgdata:
