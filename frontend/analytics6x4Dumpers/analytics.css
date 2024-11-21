@@ -142,3 +142,16 @@ body {
     margin-left: 250px;
     margin-bottom: 50px;
 }
+
+.brand-row {
+    font-weight: 700 !important; /* Жирный шрифт */
+    font-size: 24px !important; /* Размер */
+    text-align: center !important; /* Центрирование */
+    background-color: #2c4664 !important; /* Фон */
+}
+
+.district-row {
+    font-weight: bold !important; /* Жирный шрифт */
+    font-size: 30px !important; /* Увеличенный шрифт */
+    background-color: #2c4664 !important; /* Фон */
+}

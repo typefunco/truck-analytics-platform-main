@@ -99,26 +99,26 @@ var regionTranslations = map[string]string{
 	"Карачаево-Черкессия Республика":      "Karachay-Cherkessia Republic",
 	"Ставропольский край":                 "Stavropol Krai",
 	"Бурятия Республика":                  "Buryatia Republic",
-	"Центральный Федеральный Округ":       "Central Federal District",
-	"Северо-Западный Федеральный Округ":   "North West Federal District",
-	"Южный Федеральный Округ":             "South Federal District",
-	"Северо-Кавказский Федеральный Округ": "North Caucasian Federal District",
-	"Приволжский Федеральный Округ":       "Volga Federal District",
-	"Уральский Федеральный Округ":         "Ural Federal District",
-	"Сибирский Федеральный Округ":         "Siberia Federal District",
-	"Дальневосточный Федеральный Округ":   "Far East Federal District",
+	"Центральный Федеральный Округ":       "Central",
+	"Северо-Западный Федеральный Округ":   "North West",
+	"Южный Федеральный Округ":             "South",
+	"Северо-Кавказский Федеральный Округ": "North Caucasian",
+	"Приволжский Федеральный Округ":       "Volga",
+	"Уральский Федеральный Округ":         "Ural",
+	"Сибирский Федеральный Округ":         "Siberia",
+	"Дальневосточный Федеральный Округ":   "Far East",
 }
 
 // Мапа с переводами федеральных округов на английский
 var districtTranslations = map[string]string{
-	"Центральный Федеральный Округ":       "Central Federal District",
-	"Северо-Западный Федеральный Округ":   "North West Federal District",
-	"Южный Федеральный Округ":             "South Federal District",
-	"Северо-Кавказский Федеральный Округ": "North Caucasian Federal District",
-	"Приволжский Федеральный Округ":       "Volga Federal District",
-	"Уральский Федеральный Округ":         "Ural Federal District",
-	"Сибирский Федеральный Округ":         "Siberia Federal District",
-	"Дальневосточный Федеральный Округ":   "Far East Federal District",
+	"Центральный Федеральный Округ":       "Central",
+	"Северо-Западный Федеральный Округ":   "North West",
+	"Южный Федеральный Округ":             "South",
+	"Северо-Кавказский Федеральный Округ": "North Caucasian",
+	"Приволжский Федеральный Округ":       "Volga",
+	"Уральский Федеральный Округ":         "Ural",
+	"Сибирский Федеральный Округ":         "Siberia",
+	"Дальневосточный Федеральный Округ":   "Far East",
 }
 
 func nullToZero(val *int) int {
@@ -303,14 +303,14 @@ func Tractors4x2WithTotalMarket2024(ctx *gin.Context) {
 
 	// Мапа для перевода русских названий федеральных округов на английский
 	var regionTranslation = map[string]string{
-		"Дальневосточный Федеральный Округ":   "Far Eastern Federal District",
-		"Приволжский Федеральный Округ":       "Volga Federal District",
-		"Северо-Западный Федеральный Округ":   "North West Federal District",
-		"Северо-Кавказский Федеральный Округ": "North Caucasian Federal District",
-		"Сибирский Федеральный Округ":         "Siberian Federal District",
-		"Уральский Федеральный Округ":         "Ural Federal District",
-		"Центральный Федеральный Округ":       "Central Federal District",
-		"Южный Федеральный Округ":             "Southern Federal District",
+		"Дальневосточный Федеральный Округ":   "Far East",
+		"Приволжский Федеральный Округ":       "Volga",
+		"Северо-Западный Федеральный Округ":   "North West",
+		"Северо-Кавказский Федеральный Округ": "North Caucasian",
+		"Сибирский Федеральный Округ":         "Siberia",
+		"Уральский Федеральный Округ":         "Ural",
+		"Центральный Федеральный Округ":       "Central",
+		"Южный Федеральный Округ":             "South",
 	}
 
 	// SQL-запрос для получения данных по округам
@@ -617,14 +617,14 @@ func Tractors6x4WithTotalMarket2024(ctx *gin.Context) {
 
 	// Мапа для перевода русских названий федеральных округов на английский
 	var regionTranslation = map[string]string{
-		"Дальневосточный Федеральный Округ":   "Far Eastern Federal District",
-		"Приволжский Федеральный Округ":       "Volga Federal District",
-		"Северо-Западный Федеральный Округ":   "North West Federal District",
-		"Северо-Кавказский Федеральный Округ": "North Caucasian Federal District",
-		"Сибирский Федеральный Округ":         "Siberian Federal District",
-		"Уральский Федеральный Округ":         "Ural Federal District",
-		"Центральный Федеральный Округ":       "Central Federal District",
-		"Южный Федеральный Округ":             "Southern Federal District",
+		"Дальневосточный Федеральный Округ":   "Far East",
+		"Приволжский Федеральный Округ":       "Volga",
+		"Северо-Западный Федеральный Округ":   "North West",
+		"Северо-Кавказский Федеральный Округ": "North Caucasian",
+		"Сибирский Федеральный Округ":         "Siberia",
+		"Уральский Федеральный Округ":         "Ural",
+		"Центральный Федеральный Округ":       "Central",
+		"Южный Федеральный Округ":             "South",
 	}
 
 	// SQL-запрос для получения данных по округам

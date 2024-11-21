@@ -251,44 +251,57 @@ document.addEventListener("DOMContentLoaded", () => {
     function populateTable(data, year) {
         const tableBody = document.querySelector(`#data-table-${year} tbody`);
         tableBody.innerHTML = "";
-
+    
         if (!data || !data.data) return;
-
-        for (const district in data.data) {
-            const regions = data.data[district];
-
-            // Добавляем строку округа
+    
+        const districts = Object.entries(data.data).slice(1);
+    
+        for (const [district, regions] of districts) {
             const districtRow = document.createElement("tr");
-            districtRow.innerHTML = `<td colspan="8">${district}</td>`;
+            districtRow.classList.add("district-row");
+            districtRow.innerHTML = `<td colspan="8"><strong>${district}</strong></td>`;
             tableBody.appendChild(districtRow);
-
-            // Итерация по регионам
+    
+            const brandRow = document.createElement("tr");
+            brandRow.classList.add("brand-row");
+            brandRow.innerHTML = `
+                <td><em>Region</em></td>
+                <td><em>Foton</em></td>
+                <td><em>Faw</em></td>
+                <td><em>Dongfeng</em></td>
+                <td><em>Jac</em></td>
+                <td><em>Shacman</em></td>
+                <td><em>Sitrak</em></td>
+                <td><em>Total Market</em></td>
+            `;
+            tableBody.appendChild(brandRow);
+    
             regions.forEach((region) => {
                 const row = document.createElement("tr");
+                row.classList.add("data-row");
                 row.innerHTML = `
-                <td>${region.region_name || "—"}</td>
-                <td>${region.foton ?? "—"}</td>
-                <td>${region.faw ?? "—"}</td>
-                <td>${region.dongfeng || "—"}</td>
-                <td>${region.howo ?? "—"}</td>
-                <td>${region.shacman ?? "—"}</td>
-                <td>${region.sitrak ?? "—"}</td>
-                <td>${region.total ?? "—"}</td>
-            `;
+                    <td>${region.region_name || "—"}</td>
+                    <td>${region.foton ?? "—"}</td>
+                    <td>${region.faw ?? "—"}</td>
+                    <td>${region.dongfeng || "—"}</td>
+                    <td>${region.jac ?? "—"}</td>
+                    <td>${region.shacman ?? "—"}</td>
+                    <td>${region.sitrak ?? "—"}</td>
+                    <td>${region.total ?? "—"}</td>
+                `;
                 tableBody.appendChild(row);
             });
-
-            // Добавляем строку для графика
+    
             const chartRow = document.createElement("tr");
             const chartCell = document.createElement("td");
             chartCell.setAttribute("colspan", "8");
-            chartCell.classList.add('pos')
+            chartCell.classList.add("pos");
             chartRow.appendChild(chartCell);
             tableBody.appendChild(chartRow);
-
-            // Передаём данные регионов и название округа для отрисовки графика
+    
             createRegionalChart(chartCell, regions, district);
         }
+        console.log('Styles applied to district and brand rows'); // добавьте эту строку для отладки
     }
 
     // Вызываем fetchData для каждого года

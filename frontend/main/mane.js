@@ -54,23 +54,6 @@ spansPeriod.forEach((span) => {
     });
 });
 
-// fotmBtn.addEventListener("click", (btn) => {
-//     fetch("http://localhost:8080/9m2023tractors4x2")
-//         .then((response) => {
-//             if (!response.ok) {
-//                 throw new Error(`HTTP error! Status: ${response.status}`);
-//             }
-//             return response.json(); // Если ожидаете JSON ответ от сервера
-//         })
-//         .then((data) => {
-//             console.log("Данные с сервера:", data);
-//             // Здесь можно обработать полученные данные
-//         })
-//         .catch((error) => {
-//             console.error("Ошибка запроса:", error);
-//         });
-// });
-
 const redirectBtn = document.querySelector(".filter-btn");
 redirectBtn.addEventListener("click", (e) => {
     e.preventDefault();

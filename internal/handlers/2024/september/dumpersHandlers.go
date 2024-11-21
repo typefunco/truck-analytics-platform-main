@@ -17,6 +17,8 @@ func NineMonth2024Dumpers6x4(ctx *gin.Context) {
 		JAC         *int   `json:"jac"`
 		SANY        *int   `json:"sany"`
 		SITRAK      *int   `json:"sitrak"`
+		SHACMAN     *int   `json:"shacman"`
+		DONGFENG    *int   `json:"dongfeng"`
 		TOTAL       int    `json:"total"`
 		TotalMarket int    `json:"total_market"` // Добавлено поле для total market
 	}
@@ -38,7 +40,7 @@ func NineMonth2024Dumpers6x4(ctx *gin.Context) {
 			FROM truck_analytics_2024_01_09
 			WHERE 
 				truck_analytics_2024_01_09."Wheel_formula" = '6x4'
-				AND truck_analytics_2024_01_09."Brand" IN ('FAW', 'HOWO', 'JAC', 'SANY', 'SITRAK')
+				AND truck_analytics_2024_01_09."Brand" IN ('FAW', 'HOWO', 'JAC', 'SANY', 'SITRAK', 'SHACMAN', 'DONGFENG')
 				AND truck_analytics_2024_01_09."Body_type" = 'Самосвал'
 				AND truck_analytics_2024_01_09."Mass_in_segment_1" = '32001-40000'
 			GROUP BY 
@@ -68,11 +70,15 @@ func NineMonth2024Dumpers6x4(ctx *gin.Context) {
 			MAX(CASE WHEN "Brand" = 'JAC' THEN total_sales END) as JAC,
 			MAX(CASE WHEN "Brand" = 'SANY' THEN total_sales END) as SANY,
 			MAX(CASE WHEN "Brand" = 'SITRAK' THEN total_sales END) as SITRAK,
+			MAX(CASE WHEN "Brand" = 'SHACMAN' THEN total_sales END) as SHACMAN,
+			MAX(CASE WHEN "Brand" = 'DONGFENG' THEN total_sales END) as DONGFENG,
 			COALESCE(MAX(CASE WHEN "Brand" = 'FAW' THEN total_sales END), 0) +
 			COALESCE(MAX(CASE WHEN "Brand" = 'HOWO' THEN total_sales END), 0) +
 			COALESCE(MAX(CASE WHEN "Brand" = 'JAC' THEN total_sales END), 0) +
 			COALESCE(MAX(CASE WHEN "Brand" = 'SANY' THEN total_sales END), 0) +
-			COALESCE(MAX(CASE WHEN "Brand" = 'SITRAK' THEN total_sales END), 0) as TOTAL
+			COALESCE(MAX(CASE WHEN "Brand" = 'SITRAK' THEN total_sales END), 0) +
+			COALESCE(MAX(CASE WHEN "Brand" = 'SHACMAN' THEN total_sales END), 0) +
+			COALESCE(MAX(CASE WHEN "Brand" = 'DONGFENG' THEN total_sales END), 0) as TOTAL
 		FROM combined_data
 		GROUP BY 
 			"Federal_district",
@@ -119,6 +125,8 @@ func NineMonth2024Dumpers6x4(ctx *gin.Context) {
 			&ta.JAC,
 			&ta.SANY,
 			&ta.SITRAK,
+			&ta.SHACMAN,
+			&ta.DONGFENG,
 			&ta.TOTAL,
 		)
 		if err != nil {
@@ -139,7 +147,7 @@ func NineMonth2024Dumpers6x4(ctx *gin.Context) {
 		}
 
 		// Рассчитываем общий рынок как сумму всех брендов для данного региона
-		ta.TotalMarket = nullToZero(ta.FAW) + nullToZero(ta.HOWO) + nullToZero(ta.JAC) + nullToZero(ta.SANY) + nullToZero(ta.SITRAK)
+		ta.TotalMarket = nullToZero(ta.FAW) + nullToZero(ta.HOWO) + nullToZero(ta.JAC) + nullToZero(ta.SANY) + nullToZero(ta.SITRAK) + nullToZero(ta.SHACMAN) + nullToZero(ta.DONGFENG)
 
 		// Добавляем данные о регионе в соответствующий федеральный округ
 		dataByDistrict[federalDistrict] = append(dataByDistrict[federalDistrict], ta)
@@ -189,14 +197,14 @@ func Dumpers6x4WithTotalMarket2024(ctx *gin.Context) {
 
 	// Мапа для перевода русских названий федеральных округов на английский
 	var regionTranslation = map[string]string{
-		"Дальневосточный Федеральный Округ":   "Far Eastern Federal District",
-		"Приволжский Федеральный Округ":       "Volga Federal District",
-		"Северо-Западный Федеральный Округ":   "North West Federal District",
-		"Северо-Кавказский Федеральный Округ": "North Caucasian Federal District",
-		"Сибирский Федеральный Округ":         "Siberian Federal District",
-		"Уральский Федеральный Округ":         "Ural Federal District",
-		"Центральный Федеральный Округ":       "Central Federal District",
-		"Южный Федеральный Округ":             "Southern Federal District",
+		"Центральный Федеральный Округ":       "Central",
+		"Северо-Западный Федеральный Округ":   "North West",
+		"Южный Федеральный Округ":             "South",
+		"Северо-Кавказский Федеральный Округ": "North Caucasian",
+		"Приволжский Федеральный Округ":       "Volga",
+		"Уральский Федеральный Округ":         "Ural",
+		"Сибирский Федеральный Округ":         "Siberia",
+		"Дальневосточный Федеральный Округ":   "Far East",
 	}
 
 	// SQL-запрос для получения данных по округам
@@ -494,14 +502,14 @@ func Dumpers8x4WithTotalMarket2024(ctx *gin.Context) {
 
 	// Мапа для перевода русских названий федеральных округов на английский
 	var regionTranslation = map[string]string{
-		"Дальневосточный Федеральный Округ":   "Far Eastern Federal District",
-		"Приволжский Федеральный Округ":       "Volga Federal District",
-		"Северо-Западный Федеральный Округ":   "North West Federal District",
-		"Северо-Кавказский Федеральный Округ": "North Caucasian Federal District",
-		"Сибирский Федеральный Округ":         "Siberian Federal District",
-		"Уральский Федеральный Округ":         "Ural Federal District",
-		"Центральный Федеральный Округ":       "Central Federal District",
-		"Южный Федеральный Округ":             "Southern Federal District",
+		"Центральный Федеральный Округ":       "Central",
+		"Северо-Западный Федеральный Округ":   "North West",
+		"Южный Федеральный Округ":             "South",
+		"Северо-Кавказский Федеральный Округ": "North Caucasian",
+		"Приволжский Федеральный Округ":       "Volga",
+		"Уральский Федеральный Округ":         "Ural",
+		"Сибирский Федеральный Округ":         "Siberia",
+		"Дальневосточный Федеральный Округ":   "Far East",
 	}
 
 	// SQL-запрос для получения данных по округам

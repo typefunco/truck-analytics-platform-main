@@ -244,19 +244,36 @@ document.addEventListener("DOMContentLoaded", () => {
     function populateTable2023(data) {
         const tableBody = document.querySelector("#data-table-2023 tbody");
         tableBody.innerHTML = "";
-
+    
         if (!data || !data.data) return;
-
+    
         for (const district in data.data) {
             const regions = data.data[district];
-
+    
             // Добавляем строку округа
             const districtRow = document.createElement("tr");
-            districtRow.innerHTML = `<td colspan="6">${district}</td>`; 
+            districtRow.classList.add("district-row"); // Применяем класс для строки округа
+            districtRow.innerHTML = `<td colspan="7"><strong>${district}</strong></td>`;
             tableBody.appendChild(districtRow);
-
+    
+            // Добавляем заголовок для регионов
+            const brandRow = document.createElement("tr");
+            brandRow.classList.add("brand-row"); // Применяем класс для строки заголовков
+            brandRow.innerHTML = `
+                <td><em>Region</em></td>
+                <td><em>Faw</em></td>
+                <td><em>Howo</em></td>
+                <td><em>Jac</em></td>
+                <td><em>Sany</em></td>
+                <td><em>Sitrak</em></td>
+                <td><em>Total Market</em></td>
+            `;
+            tableBody.appendChild(brandRow);
+    
+            // Итерация по регионам
             regions.forEach((region) => {
                 const row = document.createElement("tr");
+                row.classList.add("data-row"); // Применяем класс для строки с данными
                 row.innerHTML = `
                     <td>${region.region_name || "—"}</td>
                     <td>${region.faw || "—"}</td>
@@ -268,36 +285,57 @@ document.addEventListener("DOMContentLoaded", () => {
                 `;
                 tableBody.appendChild(row);
             });
-
+    
             // Добавляем строку для графика
             const chartRow = document.createElement("tr");
             const chartCell = document.createElement("td");
-            chartCell.setAttribute("colspan", "6");
-            chartCell.classList.add('pos');
+            chartCell.setAttribute("colspan", "7");
+            chartCell.classList.add("pos"); // Применяем класс для стилизации ячейки графика
             chartRow.appendChild(chartCell);
             tableBody.appendChild(chartRow);
-
+    
+            // Создаем график для текущего округа
             createRegionalChart(chartCell, regions, district);
         }
     }
+    
 
     // Функция для заполнения таблицы за 2024 год
     function populateTable2024(data) {
         const tableBody = document.querySelector("#data-table-2024 tbody");
         tableBody.innerHTML = "";
-
+    
         if (!data || !data.data) return;
-
+    
         for (const district in data.data) {
             const regions = data.data[district];
-
+    
             // Добавляем строку округа
             const districtRow = document.createElement("tr");
-            districtRow.innerHTML = `<td colspan="9">${district}</td>`; 
+            districtRow.classList.add("district-row"); // Применяем класс для оформления строки округа
+            districtRow.innerHTML = `<td colspan="9"><strong>${district}</strong></td>`;
             tableBody.appendChild(districtRow);
-
+    
+            // Добавляем заголовок для регионов
+            const brandRow = document.createElement("tr");
+            brandRow.classList.add("brand-row"); // Применяем класс для строки заголовков
+            brandRow.innerHTML = `
+                <td><em>Region</em></td>
+                <td><em>Faw</em></td>
+                <td><em>Howo</em></td>
+                <td><em>Jac</em></td>
+                <td><em>Sany</em></td>
+                <td><em>Sitrak</em></td>
+                <td><em>Shacman</em></td>
+                <td><em>Dongfeng</em></td>
+                <td><em>Total Market</em></td>
+            `;
+            tableBody.appendChild(brandRow);
+    
+            // Итерация по регионам
             regions.forEach((region) => {
                 const row = document.createElement("tr");
+                row.classList.add("data-row"); // Применяем класс для строки с данными
                 row.innerHTML = `
                     <td>${region.region_name || "—"}</td>
                     <td>${region.faw || "—"}</td>
@@ -311,17 +349,20 @@ document.addEventListener("DOMContentLoaded", () => {
                 `;
                 tableBody.appendChild(row);
             });
-
+    
+            // Добавляем строку для графика
             const chartRow = document.createElement("tr");
             const chartCell = document.createElement("td");
             chartCell.setAttribute("colspan", "9");
-            chartCell.classList.add('pos');
+            chartCell.classList.add("pos"); // Применяем класс для стилизации ячейки графика
             chartRow.appendChild(chartCell);
             tableBody.appendChild(chartRow);
-
+    
+            // Создаем график для текущего округа
             createRegionalChart(chartCell, regions, district);
         }
     }
+    
 
     // Загружаем данные для 2023 и 2024
     fetchData(2023);
