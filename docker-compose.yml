@@ -27,5 +27,14 @@ services:
       - "8080:8080"
     command: ["./analytics-platform"]
 
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend.dockerfile  
+    ports:
+      - "3000:80"
+    volumes:
+      - ./frontend:/usr/share/nginx/html:ro   
+
 volumes:
   pgdata:

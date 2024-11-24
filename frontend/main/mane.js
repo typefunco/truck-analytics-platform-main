@@ -64,34 +64,35 @@ redirectBtn.addEventListener("click", (e) => {
         .dataset.value;
     let regionsType = document.querySelector('input[name="regions"]:checked')
         .dataset.value;
+    
     if (
         (truckType == "Tractors") &
         (axleType == "4x2") &
         (regionsType == "All regions")
     ) {
         window.location.href =
-            "/frontend/analytics4x2Tractors/analytics4x2.html";
+            "/analytics4x2Tractors/analytics4x2.html"; // Путь без /frontend
     } else if (
         (truckType == "Tractors") &
         (axleType == "4x2") &
         (regionsType == "Total Market")
     ) {
         window.location.href =
-            "/frontend/analytics4x2TractorsTotalMarket/analytics4x2.html";
+            "/analytics4x2TractorsTotalMarket/analytics4x2.html"; // Путь без /frontend
     } else if (
         (truckType == "Tractors") &
         (axleType == "6x4") &
         (regionsType == "Total Market")
     ) {
         window.location.href =
-            "/frontend/analytics6x4TractorsTotalMarket/analytics6x4.html";
+            "/analytics6x4TractorsTotalMarket/analytics6x4.html"; // Путь без /frontend
     } else if (
         (truckType == "Tractors") &
         (axleType == "6x4") &
         (regionsType == "All regions")
     ) {
         window.location.href =
-            "/frontend/analytics6x4Tractors/analytics6x4.html";
+            "/analytics6x4Tractors/analytics6x4.html"; // Путь без /frontend
     }
 
     if (
@@ -100,28 +101,27 @@ redirectBtn.addEventListener("click", (e) => {
         (regionsType == "All regions")
     ) {
         window.location.href =
-            "/frontend/analytics6x4Dumpers/analytics6x4.html";
+            "/analytics6x4Dumpers/analytics6x4.html"; // Путь без /frontend
     } else if (
         (truckType == "Heavy chassis") &
         (axleType == "6x4") &
         (regionsType == "Total Market")
     ) {
         window.location.href =
-            "/frontend/analytics6x4DumpersTotalMarket/analytics6x4.html";
+            "/analytics6x4DumpersTotalMarket/analytics6x4.html"; // Путь без /frontend
     } else if (
         (truckType == "Heavy chassis") &
         (axleType == "8x4") &
         (regionsType == "Total Market")
     ) {
         window.location.href =
-            "/frontend/analytics8x4DumpersTotalMarket/analytics8x4.html";
+            "/analytics8x4DumpersTotalMarket/analytics8x4.html"; // Путь без /frontend
     } else if (
         (truckType == "Heavy chassis") &
         (axleType == "8x4") &
         (regionsType == "All regions")
     ) {
         window.location.href =
-            "/frontend/analytics8x4Dumpers/analytics8x4.html";
+            "/analytics8x4Dumpers/analytics8x4.html"; // Путь без /frontend
     }
-    // console.log(truckType, truckType2, truckType3);
 });
