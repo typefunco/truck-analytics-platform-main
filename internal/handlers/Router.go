@@ -67,8 +67,8 @@ func InitRouter() {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		log.Println("Frontend server is running on port 3000...")
-		if err := http.ListenAndServe(":3000", http.FileServer(http.Dir("./frontend"))); err != nil {
+		log.Println("Frontend server is running on port 80...")
+		if err := http.ListenAndServe(":80", http.FileServer(http.Dir("./frontend"))); err != nil {
 			log.Fatalf("Failed to start frontend server: %v", err)
 		}
 	}()

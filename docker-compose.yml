@@ -32,7 +32,7 @@ services:
       context: .
       dockerfile: frontend.dockerfile  
     ports:
-      - "3000:80"
+      - "80:80"
     volumes:
       - ./frontend:/usr/share/nginx/html:ro   
 
