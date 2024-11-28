@@ -1,0 +1,157 @@
+body {
+    font-family: "Montserrat", sans-serif;
+    background-color: #171f35;
+}
+
+.container {
+    max-width: 1770px;
+    padding: 0 20px;
+    margin: 0 auto;
+}
+
+.header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-top: 30px;
+    padding-bottom: 30px;
+}
+.header__logo {
+    font-size: 48px;
+    font-weight: 700;
+    color: #7aa0ff;
+}
+.header__auth {
+    display: flex;
+    align-items: center;
+    background-color: #d9d9d9;
+    border-radius: 24px;
+    gap: 13px;
+    padding: 0 8px;
+}
+.header__auth-svgs {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+.header__auth-svgs svg {
+    cursor: pointer;
+}
+.header__auth-user {
+    display: flex;
+    align-items: center;
+}
+.header__auth-user-text {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+.header__auth-user-text h2 {
+    font-size: 36px;
+    font-weight: 500;
+}
+.header__auth-user-text p {
+    font-size: 18px;
+    font-weight: 300;
+    margin-top: -20px;
+}
+.header__title {
+    font-size: 48px;
+    font-weight: 900;
+    color: white;
+}
+
+.tables-container {
+    display: flex;
+    justify-content: space-between;
+    gap: 40px;
+    margin-top: 50px;
+    padding: 0 20px;
+    flex-wrap: wrap;
+}
+
+.year-label-2024,
+.year-label-2023 {
+    font-size: 14px;
+    color: white;
+    font-weight: 600;
+    width: 100%;
+    text-align: left;
+    margin-bottom: 20px;
+}
+
+#data-table-2023,
+#data-table-2024 {
+    border-collapse: collapse;
+    width: 910px;
+}
+
+#data-table-2023 th,
+#data-table-2024 th,
+#data-table-2023 td,
+#data-table-2024 td {
+    border: 1px solid #333;
+    padding: 10px;
+    text-align: center;
+    color: white;
+    font-size: 10px;
+    max-width: 100px;
+}
+
+#data-table-2023 th,
+#data-table-2024 th {
+    background-color: #151e34;
+}
+
+#data-table-2023 tr:nth-child(even),
+#data-table-2024 tr:nth-child(even) {
+    background-color: #222c45;
+}
+
+#data-table-2023 tr:hover,
+#data-table-2024 tr:hover {
+    background-color: #464f6b;
+}
+
+
+.pie-chart-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 40px;
+    margin-top: 50px;
+}
+
+.pie-chart {
+    width: 300px;
+    height: 450px;
+    max-width: 100%;
+    max-height: 100%;
+}
+
+.region-pie-chart-label {
+    color: white;
+    font-size: 16px;
+    font-weight: bold;
+    margin-bottom: 10px;
+    text-align: center;
+}
+
+.pos canvas:last-child{
+    margin-top: 50px;
+    margin-left: 250px;
+    margin-bottom: 50px;
+}
+
+.brand-row {
+    font-weight: 700 !important; /* Жирный шрифт */
+    font-size: 24px !important; /* Размер */
+    text-align: center !important; /* Центрирование */
+    background-color: #2c4664 !important; /* Фон */
+}
+
+.district-row {
+    font-weight: bold !important; /* Жирный шрифт */
+    font-size: 30px !important; /* Увеличенный шрифт */
+    background-color: #2c4664 !important; /* Фон */
+}
