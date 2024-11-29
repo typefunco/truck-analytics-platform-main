@@ -1,7 +1,7 @@
 document.addEventListener("DOMContentLoaded", () => {
     const urls = {
-        2023: "http://localhost:8080/9m2023tractors4x2",
-        2024: "http://localhost:8080/9m2024tractors4x2",
+        2023: "http://localhost:8080/9m2023ldt",
+        2024: "http://localhost:8080/9m2024ldt",
     };
 
     async function fetchData(year) {
@@ -265,13 +265,14 @@ document.addEventListener("DOMContentLoaded", () => {
             const brandRow = document.createElement("tr");
             brandRow.classList.add("brand-row");
             brandRow.innerHTML = `
-                <td><em>Region</em></td>
+                <td><em>REGION</em></td>
                 <td><em>Foton</em></td>
-                <td><em>Faw</em></td>
                 <td><em>Dongfeng</em></td>
-                <td><em>Jac</em></td>
-                <td><em>Shacman</em></td>
-                <td><em>Sitrak</em></td>
+                <td><em>GAZ</em></td>
+                <td><em>ISUZU</em></td>
+                <td><em>JAC</em></td>
+                <td><em>KAMAZ</em></td>
+                <td><em>OTHER</em></td>
                 <td><em>Total Market</em></td>
             `;
             tableBody.appendChild(brandRow);
@@ -282,11 +283,12 @@ document.addEventListener("DOMContentLoaded", () => {
                 row.innerHTML = `
                     <td>${region.region_name || "—"}</td>
                     <td>${region.foton ?? "—"}</td>
-                    <td>${region.faw ?? "—"}</td>
-                    <td>${region.dongfeng || "—"}</td>
+                    <td>${region.dongfeng ?? "—"}</td>
+                    <td>${region.gaz || "—"}</td>
+                    <td>${region.isuzu ?? "—"}</td>
                     <td>${region.jac ?? "—"}</td>
-                    <td>${region.shacman ?? "—"}</td>
-                    <td>${region.sitrak ?? "—"}</td>
+                    <td>${region.kamaz ?? "—"}</td>
+                    <td>${region.other ?? "—"}</td>
                     <td>${region.total ?? "—"}</td>
                 `;
                 tableBody.appendChild(row);

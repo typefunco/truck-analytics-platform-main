@@ -30,6 +30,10 @@ func InitRouter() {
 		server.Handle("GET", "/9m2023dumpers6x4", september2023.NineMonth2023Dumpers6x4)
 		server.Handle("GET", "/9m2023dumpers8x4", september2023.NineMonth2023Dumpers8x4)
 
+		// LDT | MDT
+		server.Handle("GET", "/9m2023ldt", september2023.NineMonth2023Ldt)
+		server.Handle("GET", "/9m2023mdt", september2023.NineMonth2023Mdt)
+
 		// -----------------------
 
 		// 2024
@@ -40,6 +44,10 @@ func InitRouter() {
 		// Dumpers
 		server.Handle("GET", "/9m2024dumpers6x4", september2024.NineMonth2024Dumpers6x4)
 		server.Handle("GET", "/9m2024dumpers8x4", september2024.NineMonth2024Dumpers8x4)
+
+		// LDT | MDT
+		server.Handle("GET", "/9m2024ldt", september2024.NineMonth2024Ldt)
+		server.Handle("GET", "/9m2024mdt", september2024.NineMonth2024Mdt)
 
 		// -----------------------
 

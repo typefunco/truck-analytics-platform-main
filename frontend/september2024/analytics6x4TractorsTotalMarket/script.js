@@ -266,13 +266,13 @@ document.addEventListener("DOMContentLoaded", () => {
             brandRow.classList.add("brand-row");
             brandRow.innerHTML = `
                 <td><em>Region</em></td>
-                <td><em>Foton</em></td>
-                <td><em>Faw</em></td>
-                <td><em>Dongfeng</em></td>
-                <td><em>Jac</em></td>
-                <td><em>Shacman</em></td>
-                <td><em>Sitrak</em></td>
-                <td><em>Total Market</em></td>
+                <td><em>FOTON</em></td>
+                <td><em>FAW</em></td>
+                <td><em>DONGFENG</em></td>
+                <td><em>JAC</em></td>
+                <td><em>SHACMAN</em></td>
+                <td><em>SITRAK</em></td>
+                <td><em>TOTAL MARKET</em></td>
             `;
             tableBody.appendChild(brandRow);
     
