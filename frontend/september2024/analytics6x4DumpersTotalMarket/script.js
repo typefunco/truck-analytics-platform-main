@@ -262,7 +262,6 @@ document.addEventListener("DOMContentLoaded", () => {
             brandRow.innerHTML = `
                 <td><em>REGION</em></td>
                 <td><em>FAW</em></td>
-                <td><em>HOWO</em></td>
                 <td><em>JAC</em></td>
                 <td><em>SANY</em></td>
                 <td><em>SITRAK</em></td>
@@ -277,7 +276,6 @@ document.addEventListener("DOMContentLoaded", () => {
                 row.innerHTML = `
                     <td>${region.region_name || "—"}</td>
                     <td>${region.faw || "—"}</td>
-                    <td>${region.howo || "—"}</td>
                     <td>${region.jac || "—"}</td>
                     <td>${region.sany || "—"}</td>
                     <td>${region.sitrak || "—"}</td>

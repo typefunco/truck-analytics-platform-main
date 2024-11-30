@@ -252,7 +252,7 @@ document.addEventListener("DOMContentLoaded", () => {
     
         if (!data || !data.data) return;
     
-        const districts = Object.entries(data.data).slice(1);
+        const districts = Object.entries(data.data).slice(0);
     
         for (const [district, regions] of districts) {
             const districtRow = document.createElement("tr");

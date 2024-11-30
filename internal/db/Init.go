@@ -10,7 +10,7 @@ import (
 )
 
 func Connect() (*pgx.Conn, error) {
-	//connectionURL := "postgresql://postgres:postgres@localhost:5432/truck-analytics"
+	//connectionURL := "postgresql://postgres:postgres@localhost:5432/foton"
 	dbHost := os.Getenv("DB_HOST")
 	dbPort := os.Getenv("DB_PORT")
 	dbUser := os.Getenv("DB_USER")

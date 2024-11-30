@@ -1,7 +1,7 @@
 document.addEventListener("DOMContentLoaded", () => {
     const urls = {
-        2023: "http://localhost:8080/9m2023tractors4x2",
-        2024: "http://localhost:8080/9m2024tractors4x2",
+        2023: "http://localhost:8080/9m2023ldttotal",
+        2024: "http://localhost:8080/9m2024ldttotal",
     };
 
     async function fetchData(year) {
@@ -23,7 +23,6 @@ document.addEventListener("DOMContentLoaded", () => {
     // Подключаем DataLabels плагин для текста на барах
     Chart.register(ChartDataLabels);
 
-    // Функция для создания графиков
     function createRegionalChart(cell, regions, districtName) {
         // Заголовок округа
         const title = document.createElement("h3");
@@ -57,18 +56,19 @@ document.addEventListener("DOMContentLoaded", () => {
             .attr("transform", `translate(${margin.left},${margin.top})`);
     
         // Список брендов и цвета
-        const brands = ["dongfeng", "faw", "foton", "jac", "shacman", "sitrak"];
+        const brands = ["dongfeng", "foton", "other", "gaz", "jac", "isuzu", "kamaz"];
         const brandColors = {
             dongfeng: "#FF0000",
-            faw: "#999999",
-            foton: "#002BFF",
             jac: "#EA00FF",
-            shacman: "#FF6A00",
-            sitrak: "#00742C"
+            foton: "#002BFF",
+            gaz: "#1c6e1a",
+            kamaz: "#B8860B",  
+            other: "#708090",
+            isuzu: "#a83285"
         };
     
         // Фильтрация данных
-        const filteredData = regions.filter((region) => region.region_name !== districtName);
+        const filteredData = regions;
     
         // Обработка данных
         const processedData = filteredData.map((d) => {
@@ -245,7 +245,7 @@ document.addEventListener("DOMContentLoaded", () => {
     
     }
     
-    
+
 
     // Обновляем populateTable для графиков по регионам
     function populateTable(data, year) {
@@ -254,7 +254,7 @@ document.addEventListener("DOMContentLoaded", () => {
     
         if (!data || !data.data) return;
     
-        const districts = Object.entries(data.data).slice(1);
+        const districts = Object.entries(data.data).slice(0);
     
         for (const [district, regions] of districts) {
             const districtRow = document.createElement("tr");
@@ -265,13 +265,14 @@ document.addEventListener("DOMContentLoaded", () => {
             const brandRow = document.createElement("tr");
             brandRow.classList.add("brand-row");
             brandRow.innerHTML = `
-                <td><em>Region</em></td>
+                <td><em>REGION</em></td>
                 <td><em>Foton</em></td>
-                <td><em>Faw</em></td>
                 <td><em>Dongfeng</em></td>
-                <td><em>Jac</em></td>
-                <td><em>Shacman</em></td>
-                <td><em>Sitrak</em></td>
+                <td><em>GAZ</em></td>
+                <td><em>ISUZU</em></td>
+                <td><em>JAC</em></td>
+                <td><em>KAMAZ</em></td>
+                <td><em>OTHER</em></td>
                 <td><em>Total Market</em></td>
             `;
             tableBody.appendChild(brandRow);
@@ -282,11 +283,12 @@ document.addEventListener("DOMContentLoaded", () => {
                 row.innerHTML = `
                     <td>${region.region_name || "—"}</td>
                     <td>${region.foton ?? "—"}</td>
-                    <td>${region.faw ?? "—"}</td>
-                    <td>${region.dongfeng || "—"}</td>
+                    <td>${region.dongfeng ?? "—"}</td>
+                    <td>${region.gaz || "—"}</td>
+                    <td>${region.isuzu ?? "—"}</td>
                     <td>${region.jac ?? "—"}</td>
-                    <td>${region.shacman ?? "—"}</td>
-                    <td>${region.sitrak ?? "—"}</td>
+                    <td>${region.kamaz ?? "—"}</td>
+                    <td>${region.other ?? "—"}</td>
                     <td>${region.total ?? "—"}</td>
                 `;
                 tableBody.appendChild(row);

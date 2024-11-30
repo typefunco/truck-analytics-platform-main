@@ -57,14 +57,15 @@ document.addEventListener("DOMContentLoaded", () => {
             .attr("transform", `translate(${margin.left},${margin.top})`);
     
         // Список брендов и цвета
-        const brands = ["dongfeng", "faw", "foton", "jac", "shacman", "sitrak"];
+        const brands = ["dongfeng", "foton", "other", "gaz", "jac", "isuzu", "kamaz"];
         const brandColors = {
             dongfeng: "#FF0000",
-            faw: "#999999",
-            foton: "#002BFF",
             jac: "#EA00FF",
-            shacman: "#FF6A00",
-            sitrak: "#00742C"
+            foton: "#002BFF",
+            gaz: "#1c6e1a",
+            kamaz: "#B8860B",  
+            other: "#708090",
+            isuzu: "#a83285"
         };
     
         // Фильтрация данных
@@ -254,7 +255,7 @@ document.addEventListener("DOMContentLoaded", () => {
     
         if (!data || !data.data) return;
     
-        const districts = Object.entries(data.data).slice(1);
+        const districts = Object.entries(data.data).slice(0);
     
         for (const [district, regions] of districts) {
             const districtRow = document.createElement("tr");

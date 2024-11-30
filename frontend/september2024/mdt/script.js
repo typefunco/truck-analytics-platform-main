@@ -18,9 +18,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
-
-    // Функция для создания горизонтального графика по регионам
-    // Подключаем DataLabels плагин для текста на барах
+    // Функция для создания графиков
     Chart.register(ChartDataLabels);
 
     // Функция для создания графиков
@@ -57,14 +55,16 @@ document.addEventListener("DOMContentLoaded", () => {
             .attr("transform", `translate(${margin.left},${margin.top})`);
     
         // Список брендов и цвета
-        const brands = ["dongfeng", "faw", "foton", "jac", "shacman", "sitrak"];
+        const brands = ["dongfeng", "howo", "foton", "jac", "kamaz", "ural", "daewoo", "other"];
         const brandColors = {
             dongfeng: "#FF0000",
-            faw: "#999999",
+            howo: "#8B4513",
             foton: "#002BFF",
             jac: "#EA00FF",
-            shacman: "#FF6A00",
-            sitrak: "#00742C"
+            kamaz: "#B8860B",   // Золотой
+            ural: "#FF69B4",    // Розовый
+            daewoo: "#2F4F4F",  // Шоколадный
+            other: "#708090"    // Серо-голубой (slate gray)
         };
     
         // Фильтрация данных
@@ -72,27 +72,27 @@ document.addEventListener("DOMContentLoaded", () => {
     
         // Обработка данных
         const processedData = filteredData.map((d) => {
-            const total = d.total || 1;
+            const total = d.total || 1; // Общая сумма продаж региона
             return {
                 region_name: d.region_name,
-                total: d.total,
+                total: total, // Убедитесь, что это не 0
                 ...brands.reduce((acc, brand) => {
-                    acc[brand] = d[brand] || 0;
+                    acc[brand] = d[brand] || 0;  // Заполняем значения для брендов, если их нет - ставим 0
                     return acc;
                 }, {})
             };
         });
-    
+
         // Масштабы
         const y = d3.scaleBand()
             .domain(processedData.map((d) => d.region_name))
             .range([0, height])
             .padding(0.1);
-    
+
         const x = d3.scaleLinear()
-            .domain([0, 1]) // Нормализованный масштаб
+            .domain([0, 1]) // Нормализуем от 0 до 1
             .range([0, width]);
-    
+
         // Отрисовка stacked bar chart
         svg.append("g")
             .selectAll("g")
@@ -102,10 +102,10 @@ document.addEventListener("DOMContentLoaded", () => {
             .attr("transform", (d) => `translate(0, ${y(d.region_name)})`)
             .selectAll("rect")
             .data((d) => {
-                const total = d.total || 1;
+                const total = d.total; // Для нормализации
                 return brands.map((brand) => ({
                     brand,
-                    value: d[brand] / total,
+                    value: d[brand] / total, // Нормализуем значение для каждого бренда
                     count: d[brand],
                     region: d.region_name
                 }));
@@ -113,18 +113,20 @@ document.addEventListener("DOMContentLoaded", () => {
             .enter()
             .append("rect")
             .attr("x", (d, i, nodes) => {
+                // Предыдущее значение суммы для корректной позиции
                 const previousValues = d3.sum(
                     brands.slice(0, brands.indexOf(d.brand)),
-                    (brand) => d3.select(nodes[i].parentNode).data()[0][brand] / d3.select(nodes[i].parentNode).data()[0].total || 0
+                    (brand) => d3.select(nodes[i].parentNode).data()[0][brand] / d3.select(nodes[i].parentNode).data()[0].total
                 );
-                return x(previousValues);
+                return x(previousValues);  // Возвращаем x-координату для текущего прямоугольника
             })
             .attr("y", 0)
-            .attr("width", (d) => x(d.value))
+            .attr("width", (d) => x(d.value)) // Ширина бара, пропорциональная нормализованному значению
             .attr("height", y.bandwidth())
             .attr("fill", (d) => brandColors[d.brand])
             .append("title")
             .text((d) => `${d.region} - ${d.brand}: ${d.count} продаж`);
+
     
         // Добавление текста с названиями регионов для bar chart
         svg.append("g")
@@ -245,8 +247,6 @@ document.addEventListener("DOMContentLoaded", () => {
     
     }
     
-    
-
     // Обновляем populateTable для графиков по регионам
     function populateTable(data, year) {
         const tableBody = document.querySelector(`#data-table-${year} tbody`);
@@ -254,12 +254,14 @@ document.addEventListener("DOMContentLoaded", () => {
     
         if (!data || !data.data) return;
     
-        const districts = Object.entries(data.data).slice(1);
+        const districts = Object.entries(data.data).slice(0);
     
         for (const [district, regions] of districts) {
+            const columnCount = 10; // Убедитесь, что это соответствует количеству столбцов
+    
             const districtRow = document.createElement("tr");
             districtRow.classList.add("district-row");
-            districtRow.innerHTML = `<td colspan="8"><strong>${district}</strong></td>`;
+            districtRow.innerHTML = `<td colspan="${columnCount}"><strong>${district}</strong></td>`;
             tableBody.appendChild(districtRow);
     
             const brandRow = document.createElement("tr");
@@ -298,16 +300,15 @@ document.addEventListener("DOMContentLoaded", () => {
     
             const chartRow = document.createElement("tr");
             const chartCell = document.createElement("td");
-            chartCell.setAttribute("colspan", "8");
+            chartCell.setAttribute("colspan", `${columnCount}`);
             chartCell.classList.add("pos");
             chartRow.appendChild(chartCell);
             tableBody.appendChild(chartRow);
     
             createRegionalChart(chartCell, regions, district);
         }
-        console.log('Styles applied to district and brand rows'); // добавьте эту строку для отладки
+        console.log('Styles applied to district and brand rows');
     }
-    
     
 
     // Вызываем fetchData для каждого года

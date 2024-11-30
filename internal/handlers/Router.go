@@ -56,6 +56,8 @@ func InitRouter() {
 		server.Handle("GET", "/9m2023tractors6x4total", september2023.Tractors6x4WithTotalMarket2023)
 		server.Handle("GET", "/9m2023dumpers6x4total", september2023.Dumpers6x4WithTotalMarket2023)
 		server.Handle("GET", "/9m2023dumpers8x4total", september2023.Dumpers8x4WithTotalMarket2023)
+		server.Handle("GET", "/9m2023ldttotal", september2023.NineMonth2023LDTTotal)
+		server.Handle("GET", "/9m2023mdttotal", september2023.NineMonth2023MDTTotal)
 
 		// -----------------------
 
@@ -64,6 +66,8 @@ func InitRouter() {
 		server.Handle("GET", "/9m2024tractors6x4total", september2024.Tractors6x4WithTotalMarket2024)
 		server.Handle("GET", "/9m2024dumpers6x4total", september2024.Dumpers6x4WithTotalMarket2024)
 		server.Handle("GET", "/9m2024dumpers8x4total", september2024.Dumpers8x4WithTotalMarket2024)
+		server.Handle("GET", "/9m2024ldttotal", september2024.NineMonth2024LDTTotal)
+		server.Handle("GET", "/9m2024mdttotal", september2024.NineMonth2024MDTTotal)
 
 		log.Println("API server is running on port 8080...")
 		if err := http.ListenAndServe(":8080", server); err != nil {

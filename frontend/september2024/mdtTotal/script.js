@@ -1,7 +1,7 @@
 document.addEventListener("DOMContentLoaded", () => {
     const urls = {
-        2023: "http://localhost:8080/9m2023tractors4x2",
-        2024: "http://localhost:8080/9m2024tractors4x2",
+        2023: "http://localhost:8080/9m2023mdttotal",
+        2024: "http://localhost:8080/9m2024mdttotal",
     };
 
     async function fetchData(year) {
@@ -57,18 +57,20 @@ document.addEventListener("DOMContentLoaded", () => {
             .attr("transform", `translate(${margin.left},${margin.top})`);
     
         // Список брендов и цвета
-        const brands = ["dongfeng", "faw", "foton", "jac", "shacman", "sitrak"];
+        const brands = ["dongfeng", "howo", "foton", "jac", "kamaz", "ural", "daewoo", "other"];
         const brandColors = {
             dongfeng: "#FF0000",
-            faw: "#999999",
+            howo: "#8B4513",
             foton: "#002BFF",
             jac: "#EA00FF",
-            shacman: "#FF6A00",
-            sitrak: "#00742C"
+            kamaz: "#B8860B",   // Золотой
+            ural: "#FF69B4",    // Розовый
+            daewoo: "#2F4F4F",  // Шоколадный
+            other: "#708090"    // Серо-голубой (slate gray)
         };
     
         // Фильтрация данных
-        const filteredData = regions.filter((region) => region.region_name !== districtName);
+        const filteredData = regions;
     
         // Обработка данных
         const processedData = filteredData.map((d) => {
@@ -246,7 +248,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     
     
-
+        
     // Обновляем populateTable для графиков по регионам
     function populateTable(data, year) {
         const tableBody = document.querySelector(`#data-table-${year} tbody`);
@@ -254,7 +256,7 @@ document.addEventListener("DOMContentLoaded", () => {
     
         if (!data || !data.data) return;
     
-        const districts = Object.entries(data.data).slice(1);
+        const districts = Object.entries(data.data).slice(0);
     
         for (const [district, regions] of districts) {
             const districtRow = document.createElement("tr");
