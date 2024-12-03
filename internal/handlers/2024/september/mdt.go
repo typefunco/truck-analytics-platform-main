@@ -7,6 +7,7 @@ import (
 	"truck-analytics-platform/internal/db"
 
 	"github.com/gin-gonic/gin"
+	orderedmap "github.com/wk8/go-ordered-map/v2"
 )
 
 func NineMonth2024Mdt(ctx *gin.Context) {
@@ -25,8 +26,8 @@ func NineMonth2024Mdt(ctx *gin.Context) {
 
 	// Ответ с данными по анализу грузовиков
 	type TruckAnalyticsResponse struct {
-		Data  map[string][]TruckAnalytics `json:"data"`
-		Error string                      `json:"error,omitempty"`
+		Data  *orderedmap.OrderedMap[string, []*TruckAnalytics] `json:"data"`
+		Error string                                            `json:"error,omitempty"`
 	}
 
 	// SQL запрос для получения данных
@@ -161,8 +162,24 @@ ORDER BY
 	}
 	defer rows.Close()
 
-	// Мапа для группировки данных по федеральным округам
-	dataByDistrict := make(map[string][]TruckAnalytics)
+	// Ordered map to maintain custom order for districts
+	dataByDistrict := orderedmap.New[string, []*TruckAnalytics]()
+
+	// Define the custom order of districts
+	customOrder := []string{
+		"Central",
+		"North West",
+		"Volga",
+		"South",
+		"Ural",
+		"Siberia",
+		"Far East",
+	}
+
+	// Prepopulate the map with the desired order
+	for _, district := range customOrder {
+		dataByDistrict.Set(district, []*TruckAnalytics{})
+	}
 
 	// Обработка данных из результата SQL запроса
 	for rows.Next() {
@@ -201,7 +218,9 @@ ORDER BY
 		ta.TotalMarket = nullToZero(&ta.DONGFENG) + nullToZero(&ta.FOTON) + nullToZero(&ta.HOWO) + nullToZero(&ta.JAC) + nullToZero(&ta.KAMAZ) + nullToZero(&ta.JAC) + nullToZero(&ta.URAL) + nullToZero(&ta.DAEWOO) + nullToZero(&ta.OTHER)
 
 		// Добавляем данные о регионе в соответствующий федеральный округ
-		dataByDistrict[federalDistrict] = append(dataByDistrict[federalDistrict], ta)
+		if existing, exists := dataByDistrict.Get(federalDistrict); exists {
+			dataByDistrict.Set(federalDistrict, append(existing, &ta))
+		}
 	}
 
 	// Проверка на ошибки при итерации
