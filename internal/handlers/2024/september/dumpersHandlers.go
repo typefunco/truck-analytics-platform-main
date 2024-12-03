@@ -7,6 +7,7 @@ import (
 	"truck-analytics-platform/internal/db"
 
 	"github.com/gin-gonic/gin"
+	orderedmap "github.com/wk8/go-ordered-map/v2"
 )
 
 func NineMonth2024Dumpers6x4(ctx *gin.Context) {
@@ -25,8 +26,8 @@ func NineMonth2024Dumpers6x4(ctx *gin.Context) {
 
 	// Структура для обертки ответа
 	type TruckAnalyticsResponse struct {
-		Data  map[string][]TruckAnalytics `json:"data"`
-		Error string                      `json:"error,omitempty"`
+		Data  *orderedmap.OrderedMap[string, []TruckAnalytics] `json:"data"`
+		Error string                                           `json:"error,omitempty"`
 	}
 
 	// SQL запрос
@@ -109,8 +110,25 @@ func NineMonth2024Dumpers6x4(ctx *gin.Context) {
 	}
 	defer rows.Close()
 
-	// Мапа для группировки данных по федеральным округам
-	dataByDistrict := make(map[string][]TruckAnalytics)
+	// Создаем упорядоченную карту для данных
+	dataByDistrict := orderedmap.New[string, []TruckAnalytics]()
+
+	// Определяем пользовательский порядок округов
+	customOrder := []string{
+		"Central",
+		"North West",
+		"Volga",
+		"South",
+		"North Caucasian",
+		"Ural",
+		"Siberia",
+		"Far East",
+	}
+
+	// Предзаполняем карту пустыми значениями для каждого округа
+	for _, district := range customOrder {
+		dataByDistrict.Set(district, []TruckAnalytics{})
+	}
 
 	// Обработка результатов и группировка по федеральному округу
 	for rows.Next() {
@@ -149,8 +167,10 @@ func NineMonth2024Dumpers6x4(ctx *gin.Context) {
 		// Рассчитываем общий рынок как сумму всех брендов для данного региона
 		ta.TotalMarket = nullToZero(ta.FAW) + nullToZero(ta.HOWO) + nullToZero(ta.JAC) + nullToZero(ta.SANY) + nullToZero(ta.SITRAK) + nullToZero(ta.SHACMAN) + nullToZero(ta.DONGFENG)
 
-		// Добавляем данные о регионе в соответствующий федеральный округ
-		dataByDistrict[federalDistrict] = append(dataByDistrict[federalDistrict], ta)
+		// Добавляем данные в соответствующий округ
+		if existing, ok := dataByDistrict.Get(federalDistrict); ok {
+			dataByDistrict.Set(federalDistrict, append(existing, ta))
+		}
 	}
 
 	// Проверка на ошибки при итерации

@@ -163,6 +163,7 @@ ORDER BY
 		"North West",
 		"Volga",
 		"South",
+		"North Caucasian",
 		"Ural",
 		"Siberia",
 		"Far East",

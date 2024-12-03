@@ -7,6 +7,7 @@ import (
 	"truck-analytics-platform/internal/db"
 
 	"github.com/gin-gonic/gin"
+	orderedmap "github.com/wk8/go-ordered-map/v2"
 )
 
 func NineMonth2023Dumpers6x4(ctx *gin.Context) {
@@ -21,8 +22,8 @@ func NineMonth2023Dumpers6x4(ctx *gin.Context) {
 	}
 
 	type TruckAnalyticsResponse struct {
-		Data  map[string][]TruckAnalytics `json:"data"`
-		Error string                      `json:"error,omitempty"`
+		Data  *orderedmap.OrderedMap[string, []TruckAnalytics] `json:"data"`
+		Error string                                           `json:"error,omitempty"`
 	}
 
 	query := `
@@ -85,7 +86,26 @@ func NineMonth2023Dumpers6x4(ctx *gin.Context) {
 	}
 	defer rows.Close()
 
-	dataByDistrict := make(map[string][]TruckAnalytics)
+	// Используем orderedmap для хранения данных
+	dataByDistrict := orderedmap.New[string, []TruckAnalytics]()
+
+	// Определяем порядок округов
+	customOrder := []string{
+		"Central",
+		"North West",
+		"Volga",
+		"South",
+		"Ural",
+		"Siberia",
+		"Far East",
+	}
+
+	// Предзаполняем карту пустыми значениями для каждого округа
+	for _, district := range customOrder {
+		dataByDistrict.Set(district, []TruckAnalytics{})
+	}
+
+	// Суммируем данные по округам
 	summaryByDistrict := make(map[string]TruckAnalytics)
 
 	for rows.Next() {
@@ -155,9 +175,13 @@ func NineMonth2023Dumpers6x4(ctx *gin.Context) {
 		summary.RegionName = federalDistrict
 		summaryByDistrict[federalDistrict] = summary
 
-		dataByDistrict[federalDistrict] = append(dataByDistrict[federalDistrict], ta)
+		// Добавляем данные региона в соответствующий федеральный округ
+		if existing, ok := dataByDistrict.Get(federalDistrict); ok {
+			dataByDistrict.Set(federalDistrict, append(existing, ta))
+		}
 	}
 
+	// Проверка на ошибки итерации
 	if err := rows.Err(); err != nil {
 		ctx.JSON(http.StatusInternalServerError, TruckAnalyticsResponse{
 			Error: "Error iterating over rows: " + err.Error(),
@@ -165,10 +189,14 @@ func NineMonth2023Dumpers6x4(ctx *gin.Context) {
 		return
 	}
 
+	// Добавляем суммарные данные в карту
 	for district, summary := range summaryByDistrict {
-		dataByDistrict[district] = append(dataByDistrict[district], summary)
+		if existing, ok := dataByDistrict.Get(district); ok {
+			dataByDistrict.Set(district, append(existing, summary))
+		}
 	}
 
+	// Отправляем ответ
 	ctx.JSON(http.StatusOK, TruckAnalyticsResponse{
 		Data: dataByDistrict,
 	})

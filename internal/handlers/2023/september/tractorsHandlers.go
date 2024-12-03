@@ -7,10 +7,18 @@ import (
 	"truck-analytics-platform/internal/db"
 
 	"github.com/gin-gonic/gin"
+	orderedmap "github.com/wk8/go-ordered-map/v2"
 )
 
 func Home(ctx *gin.Context) {
 	ctx.JSON(200, "Cool")
+}
+
+func nulltoZero(val *int) int {
+	if val == nil {
+		return 0 // Return 0 if the value is nil (NULL in the database)
+	}
+	return *val // Dereference the pointer and return the value
 }
 
 var regionTranslations = map[string]string{
@@ -127,87 +135,120 @@ var districtTranslations = map[string]string{
 
 func NineMonth2023Tractors4x2(ctx *gin.Context) {
 	type TruckAnalytics struct {
-		RegionName string `json:"region_name"`
-		DONGFENG   *int   `json:"dongfeng"`
-		FAW        *int   `json:"faw"`
-		FOTON      *int   `json:"foton"`
-		JAC        *int   `json:"jac"`
-		SHACMAN    *int   `json:"shacman"`
-		SITRAK     *int   `json:"sitrak"`
-		TOTAL      int    `json:"total"`
+		RegionName  string `json:"region_name"`
+		DONGFENG    *int   `json:"dongfeng"`
+		FAW         *int   `json:"faw"`
+		FOTON       *int   `json:"foton"`
+		JAC         *int   `json:"jac"`
+		SHACMAN     *int   `json:"shacman"`
+		SITRAK      *int   `json:"sitrak"`
+		TOTAL       int    `json:"total"`
+		TotalMarket int    `json:"total_market"`
 	}
 
 	type TruckAnalyticsResponse struct {
-		Data  map[string][]TruckAnalytics `json:"data"`
-		Error string                      `json:"error,omitempty"`
+		Data  *orderedmap.OrderedMap[string, []TruckAnalytics] `json:"data"`
+		Error string                                           `json:"error,omitempty"`
 	}
 
+	// SQL запрос для получения данных
 	query := `
-		WITH base_data AS (
-			SELECT 
-				truck_analytics_2023_01_12."Federal_district",
-				truck_analytics_2023_01_12."Region",
-				truck_analytics_2023_01_12."Brand",
-				SUM(truck_analytics_2023_01_12."Quantity") as total_sales
-			FROM truck_analytics_2023_01_12
-			WHERE 
-				truck_analytics_2023_01_12."Wheel_formula" = '4x2'
-				AND truck_analytics_2023_01_12."Brand" IN ('DONGFENG', 'FAW', 'FOTON', 'JAC', 'SHACMAN', 'SITRAK')
+        WITH base_data AS (
+            SELECT 
+                truck_analytics_2023_01_12."Federal_district",
+                truck_analytics_2023_01_12."Region",
+                truck_analytics_2023_01_12."Brand",
+                SUM(truck_analytics_2023_01_12."Quantity") as total_sales
+            FROM truck_analytics_2023_01_12
+            WHERE 
+                truck_analytics_2023_01_12."Wheel_formula" = '4x2'
+                AND truck_analytics_2023_01_12."Brand" IN ('DONGFENG', 'FAW', 'FOTON', 'JAC', 'SHACMAN', 'SITRAK')
+                AND truck_analytics_2023_01_12."Body_type" = 'Седельный тягач'
+                AND truck_analytics_2023_01_12."Exact_mass" = 18000
 				AND truck_analytics_2023_01_12."Month_of_registration" <= 9
-				AND truck_analytics_2023_01_12."Body_type" = 'Седельный тягач'
-				AND truck_analytics_2023_01_12."Exact_mass" = 18000
-			GROUP BY 
-				truck_analytics_2023_01_12."Federal_district", 
-				truck_analytics_2023_01_12."Region", 
-				truck_analytics_2023_01_12."Brand"
-		)
-		SELECT 
-			"Federal_district",
-			COALESCE("Region", "Federal_district") as Region_name,
-			MAX(CASE WHEN "Brand" = 'DONGFENG' THEN total_sales END) as DONGFENG,
-			MAX(CASE WHEN "Brand" = 'FAW' THEN total_sales END) as FAW,
-			MAX(CASE WHEN "Brand" = 'FOTON' THEN total_sales END) as FOTON,
-			MAX(CASE WHEN "Brand" = 'JAC' THEN total_sales END) as JAC,
-			MAX(CASE WHEN "Brand" = 'SHACMAN' THEN total_sales END) as SHACMAN,
-			MAX(CASE WHEN "Brand" = 'SITRAK' THEN total_sales END) as SITRAK,
-			COALESCE(MAX(CASE WHEN "Brand" = 'DONGFENG' THEN total_sales END), 0) +
-			COALESCE(MAX(CASE WHEN "Brand" = 'FAW' THEN total_sales END), 0) +
-			COALESCE(MAX(CASE WHEN "Brand" = 'FOTON' THEN total_sales END), 0) +
-			COALESCE(MAX(CASE WHEN "Brand" = 'JAC' THEN total_sales END), 0) +
-			COALESCE(MAX(CASE WHEN "Brand" = 'SHACMAN' THEN total_sales END), 0) +
-			COALESCE(MAX(CASE WHEN "Brand" = 'SITRAK' THEN total_sales END), 0) as TOTAL
-		FROM base_data
-		GROUP BY 
-			"Federal_district",
-			"Region"
-		ORDER BY 
-			"Federal_district",
-			CASE 
-				WHEN "Region" = "Federal_district" THEN 1 
-				ELSE 0 
-			END,
-			"Region"
-	`
+            GROUP BY 
+                truck_analytics_2023_01_12."Federal_district", 
+                truck_analytics_2023_01_12."Region", 
+                truck_analytics_2023_01_12."Brand"
+        ),
+        federal_totals AS (
+            SELECT 
+                "Federal_district",
+                "Federal_district" as "Region",
+                "Brand",
+                SUM(total_sales) as total_sales
+            FROM base_data
+            GROUP BY "Federal_district", "Brand"
+        ),
+        combined_data AS (
+            SELECT * FROM base_data
+            UNION ALL
+            SELECT * FROM federal_totals
+        )
+        SELECT 
+            "Federal_district",
+            COALESCE("Region", "Federal_district") as Region_name,
+            MAX(CASE WHEN "Brand" = 'DONGFENG' THEN total_sales END) as DONGFENG,
+            MAX(CASE WHEN "Brand" = 'FAW' THEN total_sales END) as FAW,
+            MAX(CASE WHEN "Brand" = 'FOTON' THEN total_sales END) as FOTON,
+            MAX(CASE WHEN "Brand" = 'JAC' THEN total_sales END) as JAC,
+            MAX(CASE WHEN "Brand" = 'SHACMAN' THEN total_sales END) as SHACMAN,
+            MAX(CASE WHEN "Brand" = 'SITRAK' THEN total_sales END) as SITRAK,
+            COALESCE(MAX(CASE WHEN "Brand" = 'DONGFENG' THEN total_sales END), 0) +
+            COALESCE(MAX(CASE WHEN "Brand" = 'FAW' THEN total_sales END), 0) +
+            COALESCE(MAX(CASE WHEN "Brand" = 'FOTON' THEN total_sales END), 0) +
+            COALESCE(MAX(CASE WHEN "Brand" = 'JAC' THEN total_sales END), 0) +
+            COALESCE(MAX(CASE WHEN "Brand" = 'SHACMAN' THEN total_sales END), 0) +
+            COALESCE(MAX(CASE WHEN "Brand" = 'SITRAK' THEN total_sales END), 0) as TOTAL
+        FROM combined_data
+        GROUP BY 
+            "Federal_district",
+            "Region"
+        ORDER BY 
+            "Federal_district",
+            CASE 
+                WHEN "Region" = "Federal_district" THEN 1 
+                ELSE 0 
+            END,
+            "Region"
+    `
 
+	// Соединение с базой данных
 	db, err := db.Connect()
 	if err != nil {
 		slog.Warn("Can't connect to database")
+		ctx.JSON(http.StatusInternalServerError, TruckAnalyticsResponse{Error: "Can't connect to database"})
 		return
 	}
 
 	rows, err := db.Query(context.Background(), query)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, TruckAnalyticsResponse{
-			Error: "Failed to execute query: " + err.Error(),
-		})
+		ctx.JSON(http.StatusInternalServerError, TruckAnalyticsResponse{Error: "Failed to execute query: " + err.Error()})
 		return
 	}
 	defer rows.Close()
 
-	dataByDistrict := make(map[string][]TruckAnalytics)
-	summaryByDistrict := make(map[string]TruckAnalytics)
+	// Создаем упорядоченную карту для данных
+	dataByDistrict := orderedmap.New[string, []TruckAnalytics]()
 
-	// Читаем строки результатов
+	// Определяем пользовательский порядок округов
+	customOrder := []string{
+		"Central",
+		"North West",
+		"Volga",
+		"South",
+		"North Caucasian",
+		"Ural",
+		"Siberia",
+		"Far East",
+	}
+
+	// Предзаполняем карту пустыми значениями для каждого округа
+	for _, district := range customOrder {
+		dataByDistrict.Set(district, []TruckAnalytics{})
+	}
+
+	// Обработка данных из результата SQL запроса
 	for rows.Next() {
 		var ta TruckAnalytics
 		var federalDistrict string
@@ -224,81 +265,36 @@ func NineMonth2023Tractors4x2(ctx *gin.Context) {
 			&ta.TOTAL,
 		)
 		if err != nil {
-			ctx.JSON(http.StatusInternalServerError, TruckAnalyticsResponse{
-				Error: "Failed to scan row: " + err.Error(),
-			})
+			ctx.JSON(http.StatusInternalServerError, TruckAnalyticsResponse{Error: "Failed to scan row: " + err.Error()})
 			return
 		}
 
-		// Перевод названий
-		if engName, ok := regionTranslations[ta.RegionName]; ok {
-			ta.RegionName = engName
-		}
-		if engDistrict, ok := districtTranslations[federalDistrict]; ok {
-			federalDistrict = engDistrict
+		// Перевод федерального округа, если есть в маппинге
+		if translatedDistrict, ok := districtTranslations[federalDistrict]; ok {
+			federalDistrict = translatedDistrict
 		}
 
-		// Обновляем суммарные данные по округу
-		summary := summaryByDistrict[federalDistrict]
-
-		if ta.DONGFENG != nil {
-			if summary.DONGFENG == nil {
-				summary.DONGFENG = new(int)
-			}
-			*summary.DONGFENG += *ta.DONGFENG
-		}
-		if ta.FAW != nil {
-			if summary.FAW == nil {
-				summary.FAW = new(int)
-			}
-			*summary.FAW += *ta.FAW
-		}
-		if ta.FOTON != nil {
-			if summary.FOTON == nil {
-				summary.FOTON = new(int)
-			}
-			*summary.FOTON += *ta.FOTON
-		}
-		if ta.JAC != nil {
-			if summary.JAC == nil {
-				summary.JAC = new(int)
-			}
-			*summary.JAC += *ta.JAC
-		}
-		if ta.SHACMAN != nil {
-			if summary.SHACMAN == nil {
-				summary.SHACMAN = new(int)
-			}
-			*summary.SHACMAN += *ta.SHACMAN
-		}
-		if ta.SITRAK != nil {
-			if summary.SITRAK == nil {
-				summary.SITRAK = new(int)
-			}
-			*summary.SITRAK += *ta.SITRAK
+		// Перевод региона, если есть в маппинге
+		if translatedRegion, ok := regionTranslations[ta.RegionName]; ok {
+			ta.RegionName = translatedRegion
 		}
 
-		summary.TOTAL += ta.TOTAL
-		summary.RegionName = federalDistrict
-		summaryByDistrict[federalDistrict] = summary
+		// Рассчитываем общий рынок
+		ta.TotalMarket = nulltoZero(ta.DONGFENG) + nulltoZero(ta.FAW) + nulltoZero(ta.FOTON) + nulltoZero(ta.JAC) + nulltoZero(ta.SHACMAN) + nulltoZero(ta.SITRAK)
 
-		// Добавляем данные региона в соответствующий федеральный округ
-		dataByDistrict[federalDistrict] = append(dataByDistrict[federalDistrict], ta)
+		// Добавляем данные в соответствующий округ
+		if existing, ok := dataByDistrict.Get(federalDistrict); ok {
+			dataByDistrict.Set(federalDistrict, append(existing, ta))
+		}
 	}
 
+	// Проверка на ошибки при итерации
 	if err := rows.Err(); err != nil {
-		ctx.JSON(http.StatusInternalServerError, TruckAnalyticsResponse{
-			Error: "Error iterating over rows: " + err.Error(),
-		})
+		ctx.JSON(http.StatusInternalServerError, TruckAnalyticsResponse{Error: "Error iterating over rows: " + err.Error()})
 		return
 	}
 
-	// Добавляем суммарные данные по федеральному округу
-	for district, summary := range summaryByDistrict {
-		dataByDistrict[district] = append(dataByDistrict[district], summary)
-	}
-
-	// Отправляем ответ
+	// Отправка ответа
 	ctx.JSON(http.StatusOK, TruckAnalyticsResponse{
 		Data: dataByDistrict,
 	})
