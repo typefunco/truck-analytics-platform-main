@@ -236,36 +236,24 @@ ORDER BY
 	})
 }
 
+type DistrictDataMDT struct {
+	RegionName  string `json:"region_name"`
+	DONGFENG    *int   `json:"dongfeng"`
+	FOTON       *int   `json:"foton"`
+	HOWO        *int   `json:"howo"`
+	JAC         *int   `json:"jac"`
+	KAMAZ       *int   `json:"kamaz"`
+	URAL        *int   `json:"ural"`
+	DAEWOO      *int   `json:"daewoo"`
+	OTHER       *int   `json:"other"`
+	TotalMarket int    `json:"total"`
+}
+
 func NineMonth2024MDTTotal(ctx *gin.Context) {
 
-	type TruckAnalytics struct {
-		RegionName  string `json:"region_name"`
-		DONGFENG    int    `json:"dongfeng"`
-		FOTON       int    `json:"foton"`
-		HOWO        int    `json:"howo"`
-		JAC         int    `json:"jac"`
-		KAMAZ       int    `json:"kamaz"`
-		URAL        int    `json:"ural"`
-		DAEWOO      int    `json:"daewoo"`
-		OTHER       int    `json:"other"`
-		TotalMarket int    `json:"total"`
-	}
-
-	type Summary struct {
-		DONGFENG    int `json:"dongfeng"`
-		FOTON       int `json:"foton"`
-		HOWO        int `json:"howo"`
-		JAC         int `json:"jac"`
-		KAMAZ       int `json:"kamaz"`
-		URAL        int `json:"ural"`
-		DAEWOO      int `json:"daewoo"`
-		OTHER       int `json:"other"`
-		TotalMarket int `json:"total"`
-	}
-
-	type TruckAnalyticsResponse struct {
-		Data  map[string][]TruckAnalytics `json:"data"`
-		Error string                      `json:"error,omitempty"`
+	type Response struct {
+		Data  *orderedmap.OrderedMap[string, []DistrictDataMDT] `json:"data"`
+		Error string                                            `json:"error,omitempty"`
 	}
 
 	// Мапа для перевода федеральных округов и регионов
@@ -303,100 +291,110 @@ func NineMonth2024MDTTotal(ctx *gin.Context) {
 	// Подключение к базе данных
 	db, err := db.Connect()
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, TruckAnalyticsResponse{Error: "Can't connect to database"})
+		slog.Info("Can't connect to database:", err)
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Can't connect to database"})
 		return
 	}
 	defer db.Close(context.Background())
 
-	// Запрос к базе данных
 	rows, err := db.Query(context.Background(), query)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, TruckAnalyticsResponse{Error: "Failed to execute query: " + err.Error()})
+		slog.Info("Failed to execute query:", err)
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to execute query"})
 		return
 	}
 	defer rows.Close()
 
-	var data []TruckAnalytics
-	var summary Summary
+	dataByDistrict := orderedmap.New[string, []DistrictDataMDT]()
+	customOrder := []string{
+		"Summary",
+		"Central",
+		"North West",
+		"Volga",
+		"South",
+		"North Caucasian",
+		"Ural",
+		"Siberia",
+		"Far East",
+	}
+
+	for _, district := range customOrder {
+		dataByDistrict.Set(district, []DistrictDataMDT{})
+	}
+
+	var summary DistrictDataMDT
+	summary.RegionName = "Summary"
+	initializeIntFieldsMDT(&summary)
 
 	// Обработка данных из результата SQL запроса
 	for rows.Next() {
-		var ta TruckAnalytics
-		var federalDistrict string
+		var item DistrictDataMDT
 
 		err := rows.Scan(
-			&federalDistrict,
-			&ta.DONGFENG,
-			&ta.FOTON,
-			&ta.HOWO,
-			&ta.JAC,
-			&ta.KAMAZ,
-			&ta.URAL,
-			&ta.DAEWOO,
-			&ta.OTHER,
-			&ta.TotalMarket,
+			&item.RegionName,
+			&item.DONGFENG,
+			&item.FOTON,
+			&item.HOWO,
+			&item.JAC,
+			&item.KAMAZ,
+			&item.URAL,
+			&item.DAEWOO,
+			&item.OTHER,
+			&item.TotalMarket,
 		)
 		if err != nil {
-			ctx.JSON(http.StatusInternalServerError, TruckAnalyticsResponse{Error: "Failed to scan row: " + err.Error()})
+			slog.Info("Failed to scan row:", err)
+			ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to scan row"})
 			return
 		}
 
-		// Перевод федерального округа, если есть в маппинге
-		if translatedDistrict, ok := districtTranslations[federalDistrict]; ok {
-			federalDistrict = translatedDistrict
+		addToSummaryMDT(&summary, &item)
+
+		translatedRegionName, exists := districtTranslations[item.RegionName]
+		if !exists {
+			translatedRegionName = item.RegionName
 		}
 
-		// Суммирование данных для итогов
-		summary.DONGFENG += ta.DONGFENG
-		summary.FOTON += ta.FOTON
-		summary.HOWO += ta.HOWO
-		summary.JAC += ta.JAC
-		summary.KAMAZ += ta.KAMAZ
-		summary.URAL += ta.URAL
-		summary.DAEWOO += ta.DAEWOO
-		summary.OTHER += ta.OTHER
-		summary.TotalMarket += ta.TotalMarket
-
-		// Добавляем данные о регионе в список
-		ta.RegionName = federalDistrict
-		data = append(data, ta)
+		if existing, exists := dataByDistrict.Get(translatedRegionName); exists {
+			item.RegionName = translatedRegionName
+			dataByDistrict.Set(translatedRegionName, append(existing, item))
+		}
 	}
 
-	// Проверка на ошибки при итерации
-	if err := rows.Err(); err != nil {
-		ctx.JSON(http.StatusInternalServerError, TruckAnalyticsResponse{Error: "Error iterating over rows: " + err.Error()})
+	if rows.Err() != nil {
+		slog.Info("Failed to iterate over rows:", rows.Err())
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to iterate over rows"})
 		return
 	}
 
-	// Создаем карту для ответа
-	response := make(map[string][]TruckAnalytics)
-
-	// Добавляем итоговые данные в начало
-	response["Summary"] = []TruckAnalytics{
-		{
-			RegionName:  "Summary",
-			DONGFENG:    summary.DONGFENG,
-			FOTON:       summary.FOTON,
-			HOWO:        summary.HOWO,
-			JAC:         summary.JAC,
-			KAMAZ:       summary.KAMAZ,
-			URAL:        summary.URAL,
-			DAEWOO:      summary.DAEWOO,
-			OTHER:       summary.OTHER,
-			TotalMarket: summary.TotalMarket,
-		},
+	if summaryData, exists := dataByDistrict.Get("Summary"); exists {
+		dataByDistrict.Set("Summary", append(summaryData, summary))
 	}
 
-	// Добавляем данные по округам
-	for _, ta := range data {
-		if _, exists := response[ta.RegionName]; !exists {
-			response[ta.RegionName] = []TruckAnalytics{}
-		}
-		response[ta.RegionName] = append(response[ta.RegionName], ta)
-	}
-
-	// Отправка ответа
-	ctx.JSON(http.StatusOK, TruckAnalyticsResponse{
-		Data: response,
+	ctx.JSON(http.StatusOK, Response{
+		Data: dataByDistrict,
 	})
+}
+
+func initializeIntFieldsMDT(data *DistrictDataMDT) {
+	data.DONGFENG = new(int)
+	data.FOTON = new(int)
+	data.HOWO = new(int)
+	data.JAC = new(int)
+	data.KAMAZ = new(int)
+	data.DAEWOO = new(int)
+	data.URAL = new(int)
+	data.OTHER = new(int)
+}
+
+func addToSummaryMDT(summary *DistrictDataMDT, item *DistrictDataMDT) {
+	addIntFields(summary.DONGFENG, item.DONGFENG)
+	addIntFields(summary.FOTON, item.FOTON)
+	addIntFields(summary.URAL, item.URAL)
+	addIntFields(summary.HOWO, item.HOWO)
+	addIntFields(summary.DAEWOO, item.DAEWOO)
+	addIntFields(summary.JAC, item.JAC)
+	addIntFields(summary.KAMAZ, item.KAMAZ)
+	addIntFields(summary.OTHER, item.OTHER)
+	summary.TotalMarket += item.TotalMarket
 }

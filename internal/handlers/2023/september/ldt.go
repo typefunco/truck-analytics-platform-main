@@ -2,6 +2,7 @@ package september
 
 import (
 	"context"
+	"log/slog"
 	"net/http"
 	"truck-analytics-platform/internal/db"
 
@@ -232,34 +233,23 @@ func null2Zero(val *int) int {
 	return *val
 }
 
+type DistrictData struct {
+	RegionName  string `json:"region_name"`
+	DONGFENG    *int   `json:"dongfeng"`
+	FOTON       *int   `json:"foton"`
+	GAZ         *int   `json:"gaz"`
+	ISUZU       *int   `json:"isuzu"`
+	JAC         *int   `json:"jac"`
+	KAMAZ       *int   `json:"kamaz"`
+	OTHER       *int   `json:"other"`
+	TotalMarket int    `json:"total"`
+}
+
 func NineMonth2023LDTTotal(ctx *gin.Context) {
-
-	type TruckAnalytics struct {
-		RegionName  string `json:"region_name"`
-		DONGFENG    int    `json:"dongfeng"`
-		FOTON       int    `json:"foton"`
-		GAZ         int    `json:"gaz"`
-		ISUZU       int    `json:"isuzu"`
-		JAC         int    `json:"jac"`
-		KAMAZ       int    `json:"kamaz"`
-		OTHER       int    `json:"other"`
-		TotalMarket int    `json:"total"`
-	}
-
-	type Summary struct {
-		DONGFENG    int `json:"dongfeng"`
-		FOTON       int `json:"foton"`
-		GAZ         int `json:"gaz"`
-		ISUZU       int `json:"isuzu"`
-		JAC         int `json:"jac"`
-		KAMAZ       int `json:"kamaz"`
-		OTHER       int `json:"other"`
-		TotalMarket int `json:"total"`
-	}
-
-	type TruckAnalyticsResponse struct {
-		Data  map[string][]TruckAnalytics `json:"data"`
-		Error string                      `json:"error,omitempty"`
+	// Структура для ответа
+	type Response struct {
+		Data  *orderedmap.OrderedMap[string, []DistrictData] `json:"data"`
+		Error string                                         `json:"error,omitempty"`
 	}
 
 	// Мапа для перевода федеральных округов и регионов
@@ -293,100 +283,113 @@ func NineMonth2023LDTTotal(ctx *gin.Context) {
 		ORDER BY "Federal_district"
 	`
 
-	// Подключение к базе данных
 	db, err := db.Connect()
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, TruckAnalyticsResponse{Error: "Can't connect to database"})
+		slog.Info("Can't connect to database:", err)
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Can't connect to database"})
 		return
 	}
 	defer db.Close(context.Background())
 
-	// Запрос к базе данных
 	rows, err := db.Query(context.Background(), query)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, TruckAnalyticsResponse{Error: "Failed to execute query: " + err.Error()})
+		slog.Info("Failed to execute query:", err)
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to execute query"})
 		return
 	}
 	defer rows.Close()
 
-	var data []TruckAnalytics
-	var summary Summary
+	dataByDistrict := orderedmap.New[string, []DistrictData]()
+	customOrder := []string{
+		"Summary",
+		"Central",
+		"North West",
+		"Volga",
+		"South",
+		"North Caucasian",
+		"Ural",
+		"Siberia",
+		"Far East",
+	}
 
-	// Обработка данных из результата SQL запроса
+	for _, district := range customOrder {
+		dataByDistrict.Set(district, []DistrictData{})
+	}
+
+	var summary DistrictData
+	summary.RegionName = "Summary"
+	initializeIntFields(&summary)
+
 	for rows.Next() {
-		var ta TruckAnalytics
-		var federalDistrict string
-
+		var item DistrictData
 		err := rows.Scan(
-			&federalDistrict,
-			&ta.DONGFENG,
-			&ta.FOTON,
-			&ta.GAZ,
-			&ta.ISUZU,
-			&ta.JAC,
-			&ta.KAMAZ,
-			&ta.OTHER,
-			&ta.TotalMarket,
+			&item.RegionName,
+			&item.DONGFENG,
+			&item.FOTON,
+			&item.GAZ,
+			&item.ISUZU,
+			&item.JAC,
+			&item.KAMAZ,
+			&item.OTHER,
+			&item.TotalMarket,
 		)
 		if err != nil {
-			ctx.JSON(http.StatusInternalServerError, TruckAnalyticsResponse{Error: "Failed to scan row: " + err.Error()})
+			slog.Info("Failed to scan row:", err)
+			ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to scan row"})
 			return
 		}
 
-		// Перевод федерального округа, если есть в маппинге
-		if translatedDistrict, ok := districtTranslations[federalDistrict]; ok {
-			federalDistrict = translatedDistrict
+		addToSummary(&summary, &item)
+
+		translatedRegionName, exists := districtTranslations[item.RegionName]
+		if !exists {
+			translatedRegionName = item.RegionName
 		}
 
-		// Суммирование данных для итогов
-		summary.DONGFENG += ta.DONGFENG
-		summary.FOTON += ta.FOTON
-		summary.GAZ += ta.GAZ
-		summary.ISUZU += ta.ISUZU
-		summary.JAC += ta.JAC
-		summary.KAMAZ += ta.KAMAZ
-		summary.OTHER += ta.OTHER
-		summary.TotalMarket += ta.TotalMarket
-
-		// Добавляем данные о регионе в список
-		ta.RegionName = federalDistrict
-		data = append(data, ta)
+		if existing, exists := dataByDistrict.Get(translatedRegionName); exists {
+			item.RegionName = translatedRegionName
+			dataByDistrict.Set(translatedRegionName, append(existing, item))
+		}
 	}
 
-	// Проверка на ошибки при итерации
-	if err := rows.Err(); err != nil {
-		ctx.JSON(http.StatusInternalServerError, TruckAnalyticsResponse{Error: "Error iterating over rows: " + err.Error()})
+	if rows.Err() != nil {
+		slog.Info("Failed to iterate over rows:", rows.Err())
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to iterate over rows"})
 		return
 	}
 
-	// Создаем карту для ответа
-	response := make(map[string][]TruckAnalytics)
-
-	// Добавляем итоговые данные в начало
-	response["Summary"] = []TruckAnalytics{
-		{
-			RegionName:  "Summary",
-			DONGFENG:    summary.DONGFENG,
-			FOTON:       summary.FOTON,
-			GAZ:         summary.GAZ,
-			ISUZU:       summary.ISUZU,
-			JAC:         summary.JAC,
-			KAMAZ:       summary.KAMAZ,
-			OTHER:       summary.OTHER,
-			TotalMarket: summary.TotalMarket,
-		},
+	if summaryData, exists := dataByDistrict.Get("Summary"); exists {
+		dataByDistrict.Set("Summary", append(summaryData, summary))
 	}
 
-	// Добавляем данные по округам
-	for _, ta := range data {
-		if _, exists := response[ta.RegionName]; !exists {
-			response[ta.RegionName] = []TruckAnalytics{}
-		}
-		response[ta.RegionName] = append(response[ta.RegionName], ta)
-	}
-
-	// Отправка ответа
-	ctx.JSON(http.StatusOK, TruckAnalyticsResponse{
-		Data: response,
+	ctx.JSON(http.StatusOK, Response{
+		Data: dataByDistrict,
 	})
+}
+
+func initializeIntFields(data *DistrictData) {
+	data.DONGFENG = new(int)
+	data.FOTON = new(int)
+	data.GAZ = new(int)
+	data.ISUZU = new(int)
+	data.JAC = new(int)
+	data.KAMAZ = new(int)
+	data.OTHER = new(int)
+}
+
+func addToSummary(summary *DistrictData, item *DistrictData) {
+	addIntFields(summary.DONGFENG, item.DONGFENG)
+	addIntFields(summary.FOTON, item.FOTON)
+	addIntFields(summary.GAZ, item.GAZ)
+	addIntFields(summary.ISUZU, item.ISUZU)
+	addIntFields(summary.JAC, item.JAC)
+	addIntFields(summary.KAMAZ, item.KAMAZ)
+	addIntFields(summary.OTHER, item.OTHER)
+	summary.TotalMarket += item.TotalMarket
+}
+
+func addIntFields(a, b *int) {
+	if a != nil && b != nil {
+		*a += *b
+	}
 }

@@ -313,15 +313,10 @@ func Tractors4x2WithTotalMarket2023(ctx *gin.Context) {
 		Total      int    `json:"total"`
 	}
 
-	// Структура для итогов
-	type Summary struct {
-		Dongfeng int `json:"dongfeng"`
-		Faw      int `json:"faw"`
-		Foton    int `json:"foton"`
-		Jac      int `json:"jac"`
-		Shacman  int `json:"shacman"`
-		Sitrak   int `json:"sitrak"`
-		Total    int `json:"total"`
+	// Структура для ответа
+	type Response struct {
+		Data  *orderedmap.OrderedMap[string, []DistrictData] `json:"data"`
+		Error string                                         `json:"error,omitempty"`
 	}
 
 	// Мапа для перевода русских названий федеральных округов на английский
@@ -362,7 +357,7 @@ func Tractors4x2WithTotalMarket2023(ctx *gin.Context) {
 	db, err := db.Connect()
 	if err != nil {
 		slog.Info("Can't connect to database:", err)
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Can't connect to database"})
+		ctx.JSON(http.StatusInternalServerError, Response{Error: "Can't connect to database"})
 		return
 	}
 	defer db.Close(context.Background())
@@ -371,88 +366,102 @@ func Tractors4x2WithTotalMarket2023(ctx *gin.Context) {
 	rows, err := db.Query(context.Background(), query)
 	if err != nil {
 		slog.Info("Failed to execute query:", err)
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to execute query"})
+		ctx.JSON(http.StatusInternalServerError, Response{Error: "Failed to execute query"})
 		return
 	}
 	defer rows.Close()
 
-	var data []DistrictData
+	// Создаем ordered map для хранения данных с нужным порядком
+	dataByDistrict := orderedmap.New[string, []DistrictData]()
+
+	// Определяем порядок федеральных округов
+	customOrder := []string{
+		"Summary",
+		"Central",
+		"North West",
+		"Volga",
+		"South",
+		"North Caucasian",
+		"Ural",
+		"Siberia",
+		"Far East",
+	}
+
+	// Инициализируем пустые слайсы для каждого округа
+	for _, district := range customOrder {
+		dataByDistrict.Set(district, []DistrictData{})
+	}
+
+	// Добавляем Summary в начало
+	dataByDistrict.Set("Summary", []DistrictData{})
+
+	var summary DistrictData
+	summary.RegionName = "Summary"
+	summary.Dongfeng = new(int)
+	summary.Faw = new(int)
+	summary.Foton = new(int)
+	summary.Jac = new(int)
+	summary.Shacman = new(int)
+	summary.Sitrak = new(int)
+
+	// Обработка данных из результата SQL запроса
 	for rows.Next() {
 		var item DistrictData
 		err := rows.Scan(&item.RegionName, &item.Dongfeng, &item.Faw, &item.Foton, &item.Jac, &item.Shacman, &item.Sitrak, &item.Total)
 		if err != nil {
 			slog.Info("Failed to scan row:", err)
-			ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to scan row"})
+			ctx.JSON(http.StatusInternalServerError, Response{Error: "Failed to scan row"})
 			return
 		}
-		data = append(data, item)
-	}
-	if rows.Err() != nil {
-		slog.Info("Failed to iterate over rows:", rows.Err())
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to iterate over rows"})
-		return
-	}
 
-	// Итоговые данные
-	var summary Summary
-	for _, item := range data {
+		// Обновляем суммарные значения
 		if item.Dongfeng != nil {
-			summary.Dongfeng += *item.Dongfeng
+			*summary.Dongfeng += *item.Dongfeng
 		}
 		if item.Faw != nil {
-			summary.Faw += *item.Faw
+			*summary.Faw += *item.Faw
 		}
 		if item.Foton != nil {
-			summary.Foton += *item.Foton
+			*summary.Foton += *item.Foton
 		}
 		if item.Jac != nil {
-			summary.Jac += *item.Jac
+			*summary.Jac += *item.Jac
 		}
 		if item.Shacman != nil {
-			summary.Shacman += *item.Shacman
+			*summary.Shacman += *item.Shacman
 		}
 		if item.Sitrak != nil {
-			summary.Sitrak += *item.Sitrak
+			*summary.Sitrak += *item.Sitrak
 		}
 		summary.Total += item.Total
-	}
 
-	// Подготовка JSON-ответа
-	response := make(map[string][]DistrictData)
-
-	// Добавляем Summary в начало
-	response["Summary"] = []DistrictData{
-		{
-			RegionName: "Summary",
-			Dongfeng:   &summary.Dongfeng,
-			Faw:        &summary.Faw,
-			Foton:      &summary.Foton,
-			Jac:        &summary.Jac,
-			Shacman:    &summary.Shacman,
-			Sitrak:     &summary.Sitrak,
-			Total:      summary.Total,
-		},
-	}
-
-	// Добавляем данные по округам после Summary
-	for _, item := range data {
 		// Перевод имени округа
 		translatedRegionName, exists := regionTranslation[item.RegionName]
 		if !exists {
-			translatedRegionName = item.RegionName // если нет перевода, оставляем как есть
+			translatedRegionName = item.RegionName
 		}
 
-		// Вставляем данные для каждого региона
-		if _, exists := response[translatedRegionName]; !exists {
-			response[translatedRegionName] = []DistrictData{}
+		// Добавляем данные в соответствующий округ
+		if existing, exists := dataByDistrict.Get(translatedRegionName); exists {
+			item.RegionName = translatedRegionName
+			dataByDistrict.Set(translatedRegionName, append(existing, item))
 		}
-		item.RegionName = translatedRegionName
-		response[translatedRegionName] = append(response[translatedRegionName], item)
 	}
 
-	// Ответ
-	ctx.JSON(http.StatusOK, gin.H{
-		"data": response,
+	if rows.Err() != nil {
+		slog.Info("Failed to iterate over rows:", rows.Err())
+		ctx.JSON(http.StatusInternalServerError, Response{Error: "Failed to iterate over rows"})
+		return
+	}
+
+	// Добавляем суммарные данные
+	if summaryData, exists := dataByDistrict.Get("Summary"); exists {
+		dataByDistrict.Set("Summary", append(summaryData, summary))
+	}
+
+	// Отправка ответа
+	ctx.JSON(http.StatusOK, Response{
+		Data: dataByDistrict,
 	})
 }
 
@@ -469,8 +478,8 @@ func NineMonth2023Tractors6x4(ctx *gin.Context) {
 	}
 
 	type TruckAnalyticsResponse struct {
-		Data  map[string][]TruckAnalytics `json:"data"`
-		Error string                      `json:"error,omitempty"`
+		Data  *orderedmap.OrderedMap[string, []TruckAnalytics] `json:"data"`
+		Error string                                           `json:"error,omitempty"`
 	}
 
 	query := `
@@ -534,22 +543,40 @@ func NineMonth2023Tractors6x4(ctx *gin.Context) {
 			"Region"
 	`
 
+	// Соединение с базой данных
 	db, err := db.Connect()
 	if err != nil {
 		slog.Warn("Can't connect to database")
+		ctx.JSON(http.StatusInternalServerError, TruckAnalyticsResponse{Error: "Can't connect to database"})
 		return
 	}
 
 	rows, err := db.Query(context.Background(), query)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, TruckAnalyticsResponse{
-			Error: "Failed to execute query: " + err.Error(),
-		})
+		ctx.JSON(http.StatusInternalServerError, TruckAnalyticsResponse{Error: "Failed to execute query: " + err.Error()})
 		return
 	}
 	defer rows.Close()
 
-	dataByDistrict := make(map[string][]TruckAnalytics)
+	// Создаем упорядоченную карту для данных
+	dataByDistrict := orderedmap.New[string, []TruckAnalytics]()
+
+	// Определяем пользовательский порядок округов
+	customOrder := []string{
+		"Central",
+		"North West",
+		"Volga",
+		"South",
+		"North Caucasian",
+		"Ural",
+		"Siberia",
+		"Far East",
+	}
+
+	// Предзаполняем карту пустыми значениями для каждого округа
+	for _, district := range customOrder {
+		dataByDistrict.Set(district, []TruckAnalytics{})
+	}
 
 	for rows.Next() {
 		var ta TruckAnalytics
@@ -567,82 +594,45 @@ func NineMonth2023Tractors6x4(ctx *gin.Context) {
 			&ta.TOTAL,
 		)
 		if err != nil {
-			ctx.JSON(http.StatusInternalServerError, TruckAnalyticsResponse{
-				Error: "Failed to scan row: " + err.Error(),
-			})
+			ctx.JSON(http.StatusInternalServerError, TruckAnalyticsResponse{Error: "Failed to scan row: " + err.Error()})
 			return
 		}
 
-		// Переводим названия на английский
-		if engName, ok := regionTranslations[ta.RegionName]; ok {
-			ta.RegionName = engName
-		}
-		if engDistrict, ok := districtTranslations[federalDistrict]; ok {
-			federalDistrict = engDistrict
+		// Перевод федерального округа, если есть в маппинге
+		if translatedDistrict, ok := districtTranslations[federalDistrict]; ok {
+			federalDistrict = translatedDistrict
 		}
 
-		// Добавляем данные региона
-		dataByDistrict[federalDistrict] = append(dataByDistrict[federalDistrict], ta)
+		// Перевод региона, если есть в маппинге
+		if translatedRegion, ok := regionTranslations[ta.RegionName]; ok {
+			ta.RegionName = translatedRegion
+		}
+
+		// Рассчитываем общий рынок
+		ta.TOTAL = nulltoZero(ta.DONGFENG) + nulltoZero(ta.FAW) + nulltoZero(ta.FOTON) + nulltoZero(ta.HOWO) + nulltoZero(ta.SHACMAN) + nulltoZero(ta.SITRAK)
+
+		// Добавляем данные в соответствующий округ
+		if existing, ok := dataByDistrict.Get(federalDistrict); ok {
+			dataByDistrict.Set(federalDistrict, append(existing, ta))
+		}
 	}
 
+	// Проверка на ошибки при итерации
 	if err := rows.Err(); err != nil {
-		ctx.JSON(http.StatusInternalServerError, TruckAnalyticsResponse{
-			Error: "Error iterating over rows: " + err.Error(),
-		})
+		ctx.JSON(http.StatusInternalServerError, TruckAnalyticsResponse{Error: "Error iterating over rows: " + err.Error()})
 		return
 	}
 
-	// Добавляем суммарные данные по федеральным округам
-	for district, regions := range dataByDistrict {
-		totalDongfeng, totalFaw, totalFoton, totalHowo := 0, 0, 0, 0
-		totalShacman, totalSitrak, total := 0, 0, 0
-
-		for _, region := range regions {
-			if region.DONGFENG != nil {
-				totalDongfeng += *region.DONGFENG
-			}
-			if region.FAW != nil {
-				totalFaw += *region.FAW
-			}
-			if region.FOTON != nil {
-				totalFoton += *region.FOTON
-			}
-			if region.HOWO != nil {
-				totalHowo += *region.HOWO
-			}
-			if region.SHACMAN != nil {
-				totalShacman += *region.SHACMAN
-			}
-			if region.SITRAK != nil {
-				totalSitrak += *region.SITRAK
-			}
-			total += region.TOTAL
-		}
-
-		// Проверяем, если федеральный округ уже есть в данных, не добавляем его снова
-		if _, exists := dataByDistrict[district]; !exists {
-			dataByDistrict[district] = append(dataByDistrict[district], TruckAnalytics{
-				RegionName: district,
-				DONGFENG:   &totalDongfeng,
-				FAW:        &totalFaw,
-				FOTON:      &totalFoton,
-				HOWO:       &totalHowo,
-				SHACMAN:    &totalShacman,
-				SITRAK:     &totalSitrak,
-				TOTAL:      total,
-			})
-		}
-	}
-
-	// Отправляем ответ
+	// Отправка ответа
 	ctx.JSON(http.StatusOK, TruckAnalyticsResponse{
 		Data: dataByDistrict,
 	})
 }
 
-func Tractors6x4WithTotalMarket(ctx *gin.Context) {
-	type BrandAnalytics struct {
-		DistrictName string `json:"district_name"`
+func Tractors6x4WithTotalMarket2023(ctx *gin.Context) {
+	// Структура для хранения данных округа
+	type DistrictData struct {
+		DistrictName string `json:"region_name"`
 		DONGFENG     *int   `json:"dongfeng"`
 		FAW          *int   `json:"faw"`
 		FOTON        *int   `json:"foton"`
@@ -652,147 +642,15 @@ func Tractors6x4WithTotalMarket(ctx *gin.Context) {
 		TOTAL        int    `json:"total"`
 	}
 
-	type FederalDistrictAnalyticsResponse struct {
-		Data  map[string][]BrandAnalytics `json:"data"`
-		Total int                         `json:"total_market"`
-		Error string                      `json:"error,omitempty"`
+	type Response struct {
+		Data  *orderedmap.OrderedMap[string, []DistrictData] `json:"data"`
+		Error string                                         `json:"error,omitempty"`
 	}
-
-	query := `
-		WITH base_data AS (
-			SELECT 
-				truck_analytics_2023_01_12."Federal_district",
-				truck_analytics_2023_01_12."Brand",
-				SUM(truck_analytics_2023_01_12."Quantity") as total_sales
-			FROM truck_analytics_2023_01_12
-			WHERE 
-				truck_analytics_2023_01_12."Wheel_formula" = '6x4'
-				AND truck_analytics_2023_01_12."Brand" IN ('DONGFENG', 'FAW', 'FOTON', 'HOWO', 'SHACMAN', 'SITRAK')
-				AND truck_analytics_2023_01_12."Month_of_registration" <= 9
-				AND truck_analytics_2023_01_12."Body_type" = 'Седельный тягач'
-				AND truck_analytics_2023_01_12."Exact_mass" = 25000
-			GROUP BY 
-				truck_analytics_2023_01_12."Federal_district", 
-				truck_analytics_2023_01_12."Brand"
-		)
-		SELECT 
-			"Federal_district",
-			MAX(CASE WHEN "Brand" = 'DONGFENG' THEN total_sales END) as DONGFENG,
-			MAX(CASE WHEN "Brand" = 'FAW' THEN total_sales END) as FAW,
-			MAX(CASE WHEN "Brand" = 'FOTON' THEN total_sales END) as FOTON,
-			MAX(CASE WHEN "Brand" = 'HOWO' THEN total_sales END) as HOWO,
-			MAX(CASE WHEN "Brand" = 'SHACMAN' THEN total_sales END) as SHACMAN,
-			MAX(CASE WHEN "Brand" = 'SITRAK' THEN total_sales END) as SITRAK,
-			COALESCE(MAX(CASE WHEN "Brand" = 'DONGFENG' THEN total_sales END), 0) +
-			COALESCE(MAX(CASE WHEN "Brand" = 'FAW' THEN total_sales END), 0) +
-			COALESCE(MAX(CASE WHEN "Brand" = 'FOTON' THEN total_sales END), 0) +
-			COALESCE(MAX(CASE WHEN "Brand" = 'HOWO' THEN total_sales END), 0) +
-			COALESCE(MAX(CASE WHEN "Brand" = 'SHACMAN' THEN total_sales END), 0) +
-			COALESCE(MAX(CASE WHEN "Brand" = 'SITRAK' THEN total_sales END), 0) as TOTAL
-		FROM base_data
-		GROUP BY 
-			"Federal_district"
-		ORDER BY 
-			"Federal_district"
-	`
-
-	db, err := db.Connect()
-	if err != nil {
-		slog.Warn("Can't connect to database")
-		return
-	}
-
-	rows, err := db.Query(context.Background(), query)
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, FederalDistrictAnalyticsResponse{
-			Error: "Failed to execute query: " + err.Error(),
-		})
-		return
-	}
-	defer rows.Close()
-
-	dataByDistrict := make(map[string][]BrandAnalytics)
-	totalMarket := 0
-
-	// Читаем строки результатов
-	for rows.Next() {
-		var ba BrandAnalytics
-		var federalDistrict string
-
-		err := rows.Scan(
-			&federalDistrict,
-			&ba.DONGFENG,
-			&ba.FAW,
-			&ba.FOTON,
-			&ba.HOWO,
-			&ba.SHACMAN,
-			&ba.SITRAK,
-			&ba.TOTAL,
-		)
-		if err != nil {
-			ctx.JSON(http.StatusInternalServerError, FederalDistrictAnalyticsResponse{
-				Error: "Failed to scan row: " + err.Error(),
-			})
-			return
-		}
-
-		// Перевод названия округа
-		if engDistrict, ok := districtTranslations[federalDistrict]; ok {
-			ba.DistrictName = engDistrict
-		} else {
-			ba.DistrictName = federalDistrict
-		}
-
-		// Суммируем общий рынок
-		totalMarket += ba.TOTAL
-
-		// Группируем данные по федеральным округам
-		dataByDistrict[federalDistrict] = append(dataByDistrict[federalDistrict], ba)
-	}
-
-	if err := rows.Err(); err != nil {
-		ctx.JSON(http.StatusInternalServerError, FederalDistrictAnalyticsResponse{
-			Error: "Error iterating over rows: " + err.Error(),
-		})
-		return
-	}
-
-	// Отправляем ответ
-	ctx.JSON(http.StatusOK, FederalDistrictAnalyticsResponse{
-		Data:  dataByDistrict,
-		Total: totalMarket,
-	})
-}
-
-func Tractors6x4WithTotalMarket2023(ctx *gin.Context) {
-	// Структура для хранения данных округа
-	type DistrictData struct {
-		RegionName string `json:"region_name"`
-		Dongfeng   *int   `json:"dongfeng"`
-		Faw        *int   `json:"faw"`
-		Foton      *int   `json:"foton"`
-		Howo       *int   `json:"howo"`
-		Shacman    *int   `json:"shacman"`
-		Sitrak     *int   `json:"sitrak"`
-		Total      int    `json:"total"`
-	}
-
-	// Структура для итогов
-	type Summary struct {
-		Dongfeng int `json:"dongfeng"`
-		Faw      int `json:"faw"`
-		Foton    int `json:"foton"`
-		Howo     int `json:"howo"`
-		Shacman  int `json:"shacman"`
-		Sitrak   int `json:"sitrak"`
-		Total    int `json:"total"`
-	}
-
 	// Мапа для перевода русских названий федеральных округов на английский
 	var regionTranslation = map[string]string{
 		"Дальневосточный Федеральный Округ":   "Far East",
 		"Приволжский Федеральный Округ":       "Volga",
-		"Северо-Западный Федеральный Округ":   "North West ",
+		"Северо-Западный Федеральный Округ":   "North West",
 		"Северо-Кавказский Федеральный Округ": "North Caucasian",
 		"Сибирский Федеральный Округ":         "Siberia",
 		"Уральский Федеральный Округ":         "Ural",
@@ -802,7 +660,7 @@ func Tractors6x4WithTotalMarket2023(ctx *gin.Context) {
 
 	// SQL-запрос для получения данных по округам
 	query := `
-		SELECT 
+		SELECT
 			"Federal_district",
 			COALESCE(SUM(CASE WHEN "Brand" = 'DONGFENG' THEN "Quantity" END), 0) AS DONGFENG,
 			COALESCE(SUM(CASE WHEN "Brand" = 'FAW' THEN "Quantity" END), 0) AS FAW,
@@ -812,7 +670,7 @@ func Tractors6x4WithTotalMarket2023(ctx *gin.Context) {
 			COALESCE(SUM(CASE WHEN "Brand" = 'SITRAK' THEN "Quantity" END), 0) AS SITRAK,
 			COALESCE(SUM("Quantity"), 0) AS TOTAL
 		FROM truck_analytics_2023_01_12
-		WHERE 
+		WHERE
 			"Wheel_formula" = '6x4'
 			AND "Brand" IN ('DONGFENG', 'FAW', 'FOTON', 'HOWO', 'SHACMAN', 'SITRAK')
 			AND "Month_of_registration" <= 9
@@ -822,7 +680,6 @@ func Tractors6x4WithTotalMarket2023(ctx *gin.Context) {
 		ORDER BY "Federal_district"
 	`
 
-	// Подключение к базе данных
 	db, err := db.Connect()
 	if err != nil {
 		slog.Info("Can't connect to database:", err)
@@ -831,7 +688,6 @@ func Tractors6x4WithTotalMarket2023(ctx *gin.Context) {
 	}
 	defer db.Close(context.Background())
 
-	// Запрос к базе данных
 	rows, err := db.Query(context.Background(), query)
 	if err != nil {
 		slog.Info("Failed to execute query:", err)
@@ -840,82 +696,83 @@ func Tractors6x4WithTotalMarket2023(ctx *gin.Context) {
 	}
 	defer rows.Close()
 
-	var data []DistrictData
+	dataByDistrict := orderedmap.New[string, []DistrictData]()
+	customOrder := []string{
+		"Summary",
+		"Central",
+		"North West",
+		"Volga",
+		"South",
+		"North Caucasian",
+		"Ural",
+		"Siberia",
+		"Far East",
+	}
+
+	for _, district := range customOrder {
+		dataByDistrict.Set(district, []DistrictData{})
+	}
+
+	summary := DistrictData{
+		DistrictName: "Summary",
+		DONGFENG:     new(int),
+		FAW:          new(int),
+		FOTON:        new(int),
+		HOWO:         new(int),
+		SHACMAN:      new(int),
+		SITRAK:       new(int),
+		TOTAL:        0,
+	}
+
 	for rows.Next() {
-		var item DistrictData
-		err := rows.Scan(&item.RegionName, &item.Dongfeng, &item.Faw, &item.Foton, &item.Howo, &item.Shacman, &item.Sitrak, &item.Total)
+		var ba DistrictData
+
+		err := rows.Scan(
+			&ba.DistrictName,
+			&ba.DONGFENG,
+			&ba.FAW,
+			&ba.FOTON,
+			&ba.HOWO,
+			&ba.SHACMAN,
+			&ba.SITRAK,
+			&ba.TOTAL,
+		)
 		if err != nil {
 			slog.Info("Failed to scan row:", err)
 			ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to scan row"})
 			return
 		}
-		data = append(data, item)
+
+		translatedRegionName, exists := regionTranslation[ba.DistrictName]
+		if !exists {
+			translatedRegionName = ba.DistrictName
+		}
+
+		if existing, exists := dataByDistrict.Get(translatedRegionName); exists {
+			ba.DistrictName = translatedRegionName
+			dataByDistrict.Set(translatedRegionName, append(existing, ba))
+		}
+
+		// Агрегируем данные для Summary
+		*summary.DONGFENG += *ba.DONGFENG
+		*summary.FAW += *ba.FAW
+		*summary.FOTON += *ba.FOTON
+		*summary.HOWO += *ba.HOWO
+		*summary.SHACMAN += *ba.SHACMAN
+		*summary.SITRAK += *ba.SITRAK
+		summary.TOTAL += ba.TOTAL
 	}
+
 	if rows.Err() != nil {
 		slog.Info("Failed to iterate over rows:", rows.Err())
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to iterate over rows"})
 		return
 	}
 
-	// Итоговые данные
-	var summary Summary
-	for _, item := range data {
-		if item.Dongfeng != nil {
-			summary.Dongfeng += *item.Dongfeng
-		}
-		if item.Faw != nil {
-			summary.Faw += *item.Faw
-		}
-		if item.Foton != nil {
-			summary.Foton += *item.Foton
-		}
-		if item.Howo != nil {
-			summary.Howo += *item.Howo
-		}
-		if item.Shacman != nil {
-			summary.Shacman += *item.Shacman
-		}
-		if item.Sitrak != nil {
-			summary.Sitrak += *item.Sitrak
-		}
-		summary.Total += item.Total
-	}
+	// Добавляем итоговые данные в Summary
+	dataByDistrict.Set("Summary", []DistrictData{summary})
 
-	// Подготовка JSON-ответа
-	response := make(map[string][]DistrictData)
-
-	// Добавляем Summary в начало
-	response["Summary"] = []DistrictData{
-		{
-			RegionName: "Summary",
-			Dongfeng:   &summary.Dongfeng,
-			Faw:        &summary.Faw,
-			Foton:      &summary.Foton,
-			Howo:       &summary.Howo,
-			Shacman:    &summary.Shacman,
-			Sitrak:     &summary.Sitrak,
-			Total:      summary.Total,
-		},
-	}
-
-	// Добавляем данные по округам после Summary
-	for _, item := range data {
-		// Перевод имени округа
-		translatedRegionName, exists := regionTranslation[item.RegionName]
-		if !exists {
-			translatedRegionName = item.RegionName // если нет перевода, оставляем как есть
-		}
-
-		// Вставляем данные для каждого региона
-		if _, exists := response[translatedRegionName]; !exists {
-			response[translatedRegionName] = []DistrictData{}
-		}
-		item.RegionName = translatedRegionName
-		response[translatedRegionName] = append(response[translatedRegionName], item)
-	}
-
-	// Ответ
-	ctx.JSON(http.StatusOK, gin.H{
-		"data": response,
+	ctx.JSON(http.StatusOK, Response{
+		Data: dataByDistrict,
 	})
 }
