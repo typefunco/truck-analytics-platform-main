@@ -196,7 +196,12 @@ document.addEventListener("DOMContentLoaded", () => {
             .attr("d", arc)
             .attr("fill", (d) => brandColors[d.data.brand])
             .attr("stroke", "white")
-            .style("stroke-width", 1.5);
+            .style("stroke-width", 1.5)
+            .append("title") // Добавляем всплывающую подсказку
+            .text((d) => {
+                const percentage = (d.data.value / totalSales) * 100;
+                return `${d.data.brand}: ${percentage.toFixed(1)}%`;
+            });
     
         svgPie.selectAll("text")
             .data(pie(totalMarketData))

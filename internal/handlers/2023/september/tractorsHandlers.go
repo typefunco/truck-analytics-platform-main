@@ -323,7 +323,7 @@ func Tractors4x2WithTotalMarket2023(ctx *gin.Context) {
 	var regionTranslation = map[string]string{
 		"Дальневосточный Федеральный Округ":   "Far East",
 		"Приволжский Федеральный Округ":       "Volga",
-		"Северо-Западный Федеральный Округ":   "North West ",
+		"Северо-Западный Федеральный Округ":   "North West",
 		"Северо-Кавказский Федеральный Округ": "North Caucasian",
 		"Сибирский Федеральный Округ":         "Siberia",
 		"Уральский Федеральный Округ":         "Ural",
