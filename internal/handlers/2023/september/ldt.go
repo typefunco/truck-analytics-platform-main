@@ -205,7 +205,7 @@ func NineMonth2023Ldt(ctx *gin.Context) {
 		}
 
 		// Рассчитываем общий рынок
-		ta.TotalMarket = null2Zero(&ta.DONGFENG) + null2Zero(&ta.FOTON) + null2Zero(&ta.GAZ) + null2Zero(&ta.JAC) + null2Zero(&ta.ISUZU) + null2Zero(&ta.JAC) + null2Zero(&ta.KAMAZ) + null2Zero(&ta.OTHER)
+		ta.TotalMarket = null2Zero(&ta.DONGFENG) + null2Zero(&ta.FOTON) + null2Zero(&ta.GAZ) + null2Zero(&ta.JAC) + null2Zero(&ta.ISUZU) + null2Zero(&ta.KAMAZ) + null2Zero(&ta.OTHER)
 
 		// Добавляем данные о регионе в соответствующий федеральный округ
 		if existing, exists := dataByDistrict.Get(federalDistrict); exists {

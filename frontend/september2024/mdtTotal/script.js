@@ -264,22 +264,26 @@ document.addEventListener("DOMContentLoaded", () => {
         const districts = Object.entries(data.data).slice(0);
     
         for (const [district, regions] of districts) {
+            const columnCount = 10; // Убедитесь, что это соответствует количеству столбцов
+    
             const districtRow = document.createElement("tr");
             districtRow.classList.add("district-row");
-            districtRow.innerHTML = `<td colspan="8"><strong>${district}</strong></td>`;
+            districtRow.innerHTML = `<td colspan="${columnCount}"><strong>${district}</strong></td>`;
             tableBody.appendChild(districtRow);
     
             const brandRow = document.createElement("tr");
             brandRow.classList.add("brand-row");
             brandRow.innerHTML = `
-                <td><em>Region</em></td>
-                <td><em>Foton</em></td>
-                <td><em>Faw</em></td>
-                <td><em>Dongfeng</em></td>
-                <td><em>Jac</em></td>
-                <td><em>Shacman</em></td>
-                <td><em>Sitrak</em></td>
-                <td><em>Total Market</em></td>
+                <td><em>REGION</em></td>
+                <td><em>FOTON</em></td>
+                <td><em>DONGFENG</em></td>
+                <td><em>HOWO</em></td>
+                <td><em>JAC</em></td>
+                <td><em>KAMAZ</em></td>
+                <td><em>URAL</em></td>
+                <td><em>DAEWOO</em></td>
+                <td><em>OTHER</em></td>
+                <td><em>TOTAL MARKET</em></td>
             `;
             tableBody.appendChild(brandRow);
     
@@ -289,11 +293,13 @@ document.addEventListener("DOMContentLoaded", () => {
                 row.innerHTML = `
                     <td>${region.region_name || "—"}</td>
                     <td>${region.foton ?? "—"}</td>
-                    <td>${region.faw ?? "—"}</td>
-                    <td>${region.dongfeng || "—"}</td>
+                    <td>${region.dongfeng ?? "—"}</td>
+                    <td>${region.howo || "—"}</td>
                     <td>${region.jac ?? "—"}</td>
-                    <td>${region.shacman ?? "—"}</td>
-                    <td>${region.sitrak ?? "—"}</td>
+                    <td>${region.kamaz ?? "—"}</td>
+                    <td>${region.ural ?? "—"}</td>
+                    <td>${region.daewoo ?? "—"}</td>
+                    <td>${region.other ?? "—"}</td>
                     <td>${region.total ?? "—"}</td>
                 `;
                 tableBody.appendChild(row);
@@ -301,16 +307,15 @@ document.addEventListener("DOMContentLoaded", () => {
     
             const chartRow = document.createElement("tr");
             const chartCell = document.createElement("td");
-            chartCell.setAttribute("colspan", "8");
+            chartCell.setAttribute("colspan", `${columnCount}`);
             chartCell.classList.add("pos");
             chartRow.appendChild(chartCell);
             tableBody.appendChild(chartRow);
     
             createRegionalChart(chartCell, regions, district);
         }
-        console.log('Styles applied to district and brand rows'); // добавьте эту строку для отладки
+        console.log('Styles applied to district and brand rows');
     }
-    
     
 
     // Вызываем fetchData для каждого года

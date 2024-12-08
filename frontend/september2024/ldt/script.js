@@ -251,9 +251,6 @@ document.addEventListener("DOMContentLoaded", () => {
     
     }
     
-    
-
-    // Обновляем populateTable для графиков по регионам
     function populateTable(data, year) {
         const tableBody = document.querySelector(`#data-table-${year} tbody`);
         tableBody.innerHTML = "";
@@ -263,23 +260,25 @@ document.addEventListener("DOMContentLoaded", () => {
         const districts = Object.entries(data.data).slice(0);
     
         for (const [district, regions] of districts) {
+            const columnCount = 10; // Убедитесь, что это соответствует количеству столбцов
+    
             const districtRow = document.createElement("tr");
             districtRow.classList.add("district-row");
-            districtRow.innerHTML = `<td colspan="8"><strong>${district}</strong></td>`;
+            districtRow.innerHTML = `<td colspan="${columnCount}"><strong>${district}</strong></td>`;
             tableBody.appendChild(districtRow);
     
             const brandRow = document.createElement("tr");
             brandRow.classList.add("brand-row");
             brandRow.innerHTML = `
                 <td><em>REGION</em></td>
-                <td><em>Foton</em></td>
-                <td><em>Dongfeng</em></td>
+                <td><em>FOTON</em></td>
+                <td><em>DONGFENG</em></td>
                 <td><em>GAZ</em></td>
                 <td><em>ISUZU</em></td>
                 <td><em>JAC</em></td>
                 <td><em>KAMAZ</em></td>
                 <td><em>OTHER</em></td>
-                <td><em>Total Market</em></td>
+                <td><em>TOTAL MARKET</em></td>
             `;
             tableBody.appendChild(brandRow);
     
@@ -302,7 +301,7 @@ document.addEventListener("DOMContentLoaded", () => {
     
             const chartRow = document.createElement("tr");
             const chartCell = document.createElement("td");
-            chartCell.setAttribute("colspan", "8");
+            chartCell.setAttribute("colspan", `${columnCount}`);
             chartCell.classList.add("pos");
             chartRow.appendChild(chartCell);
             tableBody.appendChild(chartRow);
@@ -311,7 +310,6 @@ document.addEventListener("DOMContentLoaded", () => {
         }
         console.log('Styles applied to district and brand rows'); // добавьте эту строку для отладки
     }
-    
     
 
     // Вызываем fetchData для каждого года

@@ -33,118 +33,121 @@ func NineMonth2023Mdt(ctx *gin.Context) {
 	// SQL запрос для получения данных
 	query := `
 	WITH base_data AS (
-		SELECT 
-			"Federal_district",
-			"Region",  
-			"Brand",
-			"City",
-			SUM("Quantity") AS total_sales
-		FROM mdt_12_18_truck_analytics_10_2023
-		WHERE "Brand" IN ('DONGFENG', 'FOTON', 'HOWO', 'JAC', 'KAMAZ', 'URAL', 'DAEWOO')
-		AND "Month_of_registration" <= 9  -- Filter for months <= 9
-		GROUP BY "Federal_district", "Region", "City", "Brand"
-	),
-	federal_totals AS (
-		SELECT 
-			"Federal_district",
-			"Region",
-			'TOTAL' AS "City",
-			"Brand",
-			SUM(total_sales) AS total_sales
-		FROM base_data
-		GROUP BY "Federal_district", "Region", "Brand"
-	),
-	other_brands AS (
-		SELECT 
-			"Federal_district",
-			"Region",  
-			'OTHER' AS "Brand",
-			'OTHER' AS "City",
-			SUM("Quantity") AS total_sales
-		FROM mdt_12_18_truck_analytics_10_2023
-		WHERE "Brand" NOT IN ('DONGFENG', 'FOTON', 'HOWO', 'JAC', 'KAMAZ', 'URAL', 'DAEWOO')
-		AND "Month_of_registration" <= 9  -- Filter for months <= 9
-		GROUP BY "Federal_district", "Region"
-	),
-	combined_data AS (
-		SELECT "Federal_district", "Region", "City", "Brand", total_sales
-		FROM base_data
-		UNION ALL
-		SELECT "Federal_district", "Region", "City", "Brand", total_sales
-		FROM federal_totals
-		UNION ALL
-		SELECT "Federal_district", "Region", "City", "Brand", total_sales
-		FROM other_brands
-	),
-	pivoted_data AS (
-		SELECT 
-			"Region" AS Oblast_name,
-			"Federal_district", 
-			MAX(CASE WHEN "Brand" = 'DONGFENG' THEN total_sales END) AS DONGFENG,
-			MAX(CASE WHEN "Brand" = 'FOTON' THEN total_sales END) AS FOTON,
-			MAX(CASE WHEN "Brand" = 'HOWO' THEN total_sales END) AS HOWO,
-			MAX(CASE WHEN "Brand" = 'JAC' THEN total_sales END) AS JAC,
-			MAX(CASE WHEN "Brand" = 'KAMAZ' THEN total_sales END) AS KAMAZ,
-			MAX(CASE WHEN "Brand" = 'URAL' THEN total_sales END) AS URAL,
-			MAX(CASE WHEN "Brand" = 'DAEWOO' THEN total_sales END) AS DAEWOO,
-			MAX(CASE WHEN "Brand" = 'OTHER' THEN total_sales END) AS OTHER,
-			COALESCE(MAX(CASE WHEN "Brand" = 'DONGFENG' THEN total_sales END), 0) +
-			COALESCE(MAX(CASE WHEN "Brand" = 'FOTON' THEN total_sales END), 0) +
-			COALESCE(MAX(CASE WHEN "Brand" = 'HOWO' THEN total_sales END), 0) +
-			COALESCE(MAX(CASE WHEN "Brand" = 'JAC' THEN total_sales END), 0) +
-			COALESCE(MAX(CASE WHEN "Brand" = 'KAMAZ' THEN total_sales END), 0) +
-			COALESCE(MAX(CASE WHEN "Brand" = 'URAL' THEN total_sales END), 0) +
-			COALESCE(MAX(CASE WHEN "Brand" = 'DAEWOO' THEN total_sales END), 0) +
-			COALESCE(MAX(CASE WHEN "Brand" = 'OTHER' THEN total_sales END), 0) AS TOTAL
-		FROM combined_data
-		GROUP BY "Region", "Federal_district"
-	),
-	federal_totals_by_region AS (
-		SELECT 
-			"Federal_district",
-			'TOTAL' AS Oblast_name,  
-			SUM(DONGFENG) AS DONGFENG,
-			SUM(FOTON) AS FOTON,
-			SUM(HOWO) AS HOWO,
-			SUM(JAC) AS JAC,
-			SUM(KAMAZ) AS KAMAZ,
-			SUM(URAL) AS URAL,
-			SUM(DAEWOO) AS DAEWOO,
-			SUM(OTHER) AS OTHER,
-			SUM(TOTAL) AS TOTAL
-		FROM pivoted_data
-		GROUP BY "Federal_district"
-	),
-	final_data AS (
-		SELECT Oblast_name, "Federal_district", DONGFENG, FOTON, HOWO, JAC, KAMAZ, URAL, DAEWOO, OTHER, TOTAL
-		FROM pivoted_data
-		UNION ALL
-		SELECT Oblast_name, "Federal_district", DONGFENG, FOTON, HOWO, JAC, KAMAZ, URAL, DAEWOO, OTHER, TOTAL
-		FROM federal_totals_by_region
-	)
-	SELECT 
-		"Federal_district",  -- Changed column order here
-		CASE 
-			WHEN Oblast_name = 'TOTAL' THEN "Federal_district"  
-			ELSE Oblast_name 
-		END AS Oblast_name,
-		COALESCE(DONGFENG, 0) AS DONGFENG,
-		COALESCE(FOTON, 0) AS FOTON,
-		COALESCE(HOWO, 0) AS HOWO,
-		COALESCE(JAC, 0) AS JAC,
-		COALESCE(KAMAZ, 0) AS KAMAZ,
-		COALESCE(URAL, 0) AS URAL,
-		COALESCE(DAEWOO, 0) AS DAEWOO,
-		COALESCE(OTHER, 0) AS OTHER,
-		COALESCE(TOTAL, 0) AS TOTAL
-	FROM final_data
-	ORDER BY 
-		"Federal_district",  
-		CASE 
-			WHEN Oblast_name = 'TOTAL' THEN 1  
-			ELSE 0
-		END,
-		Oblast_name;
+    SELECT 
+        "Federal_district",
+        "Region",  
+        "Brand",
+        "City",
+        SUM("Quantity") AS total_sales
+    FROM mdt_12_18_truck_analytics_10_2023
+    WHERE "Brand" IN ('DONGFENG', 'FOTON', 'HOWO', 'JAC', 'KAMAZ', 'URAL', 'DAEWOO')
+    AND "Month_of_registration" <= 9  -- Filter for months <= 9
+    GROUP BY "Federal_district", "Region", "City", "Brand"
+),
+federal_totals AS (
+    SELECT 
+        "Federal_district",
+        "Region",
+        'TOTAL' AS "City",
+        "Brand",
+        SUM(total_sales) AS total_sales
+    FROM base_data
+    GROUP BY "Federal_district", "Region", "Brand"
+),
+other_brands AS (
+    SELECT 
+        "Federal_district",
+        "Region",  
+        'OTHER' AS "Brand",
+        'OTHER' AS "City",
+        SUM("Quantity") AS total_sales
+    FROM mdt_12_18_truck_analytics_10_2023
+    WHERE "Brand" NOT IN ('DONGFENG', 'FOTON', 'HOWO', 'JAC', 'KAMAZ', 'URAL', 'DAEWOO')
+    AND "Month_of_registration" <= 9  -- Filter for months <= 9
+    GROUP BY "Federal_district", "Region"
+),
+combined_data AS (
+    SELECT "Federal_district", "Region", "City", "Brand", total_sales
+    FROM base_data
+    UNION ALL
+    SELECT "Federal_district", "Region", "City", "Brand", total_sales
+    FROM federal_totals
+    UNION ALL
+    SELECT "Federal_district", "Region", "City", "Brand", total_sales
+    FROM other_brands
+),
+pivoted_data AS (
+    SELECT 
+        "Region" AS Oblast_name,
+        "Federal_district", 
+        MAX(CASE WHEN "Brand" = 'DONGFENG' THEN total_sales END) AS DONGFENG,
+        MAX(CASE WHEN "Brand" = 'FOTON' THEN total_sales END) AS FOTON,
+        MAX(CASE WHEN "Brand" = 'HOWO' THEN total_sales END) AS HOWO,
+        MAX(CASE WHEN "Brand" = 'JAC' THEN total_sales END) AS JAC,
+        MAX(CASE WHEN "Brand" = 'KAMAZ' THEN total_sales END) AS KAMAZ,
+        MAX(CASE WHEN "Brand" = 'URAL' THEN total_sales END) AS URAL,
+        MAX(CASE WHEN "Brand" = 'DAEWOO' THEN total_sales END) AS DAEWOO,
+        MAX(CASE WHEN "Brand" = 'OTHER' THEN total_sales END) AS OTHER,
+        -- Total calculated explicitly as the sum of all brand columns
+        COALESCE(MAX(CASE WHEN "Brand" = 'DONGFENG' THEN total_sales END), 0) +
+        COALESCE(MAX(CASE WHEN "Brand" = 'FOTON' THEN total_sales END), 0) +
+        COALESCE(MAX(CASE WHEN "Brand" = 'HOWO' THEN total_sales END), 0) +
+        COALESCE(MAX(CASE WHEN "Brand" = 'JAC' THEN total_sales END), 0) +
+        COALESCE(MAX(CASE WHEN "Brand" = 'KAMAZ' THEN total_sales END), 0) +
+        COALESCE(MAX(CASE WHEN "Brand" = 'URAL' THEN total_sales END), 0) +
+        COALESCE(MAX(CASE WHEN "Brand" = 'DAEWOO' THEN total_sales END), 0) +
+        COALESCE(MAX(CASE WHEN "Brand" = 'OTHER' THEN total_sales END), 0) AS TOTAL
+    FROM combined_data
+    GROUP BY "Region", "Federal_district"
+),
+federal_totals_by_region AS (
+    SELECT 
+        "Federal_district",
+        'TOTAL' AS Oblast_name,  
+        SUM(DONGFENG) AS DONGFENG,
+        SUM(FOTON) AS FOTON,
+        SUM(HOWO) AS HOWO,
+        SUM(JAC) AS JAC,
+        SUM(KAMAZ) AS KAMAZ,
+        SUM(URAL) AS URAL,
+        SUM(DAEWOO) AS DAEWOO,
+        SUM(OTHER) AS OTHER,
+        -- Total calculated as the sum of brand sums
+        SUM(DONGFENG) + SUM(FOTON) + SUM(HOWO) + SUM(JAC) + SUM(KAMAZ) +
+        SUM(URAL) + SUM(DAEWOO) + SUM(OTHER) AS TOTAL
+    FROM pivoted_data
+    GROUP BY "Federal_district"
+),
+final_data AS (
+    SELECT Oblast_name, "Federal_district", DONGFENG, FOTON, HOWO, JAC, KAMAZ, URAL, DAEWOO, OTHER, TOTAL
+    FROM pivoted_data
+    UNION ALL
+    SELECT Oblast_name, "Federal_district", DONGFENG, FOTON, HOWO, JAC, KAMAZ, URAL, DAEWOO, OTHER, TOTAL
+    FROM federal_totals_by_region
+)
+SELECT 
+    "Federal_district",
+    CASE 
+        WHEN Oblast_name = 'TOTAL' THEN "Federal_district"  
+        ELSE Oblast_name 
+    END AS Oblast_name,
+    COALESCE(DONGFENG, 0) AS DONGFENG,
+    COALESCE(FOTON, 0) AS FOTON,
+    COALESCE(HOWO, 0) AS HOWO,
+    COALESCE(JAC, 0) AS JAC,
+    COALESCE(KAMAZ, 0) AS KAMAZ,
+    COALESCE(URAL, 0) AS URAL,
+    COALESCE(DAEWOO, 0) AS DAEWOO,
+    COALESCE(OTHER, 0) AS OTHER,
+    COALESCE(TOTAL, 0) AS TOTAL
+FROM final_data
+ORDER BY 
+    "Federal_district",  
+    CASE 
+        WHEN Oblast_name = 'TOTAL' THEN 1  
+        ELSE 0
+    END,
+    Oblast_name;
     `
 
 	// Соединение с базой данных
@@ -215,7 +218,7 @@ func NineMonth2023Mdt(ctx *gin.Context) {
 		}
 
 		// Рассчитываем общий рынок
-		ta.TOTAL = null2Zero(&ta.DONGFENG) + null2Zero(&ta.FOTON) + null2Zero(&ta.HOWO) + null2Zero(&ta.JAC) + null2Zero(&ta.KAMAZ) + null2Zero(&ta.JAC) + null2Zero(&ta.URAL) + null2Zero(&ta.DAEWOO) + null2Zero(&ta.OTHER)
+		ta.TOTAL = null2Zero(&ta.DONGFENG) + null2Zero(&ta.FOTON) + null2Zero(&ta.HOWO) + null2Zero(&ta.JAC) + null2Zero(&ta.KAMAZ) + null2Zero(&ta.URAL) + null2Zero(&ta.DAEWOO) + null2Zero(&ta.OTHER)
 
 		// Добавляем данные о регионе в соответствующий федеральный округ
 		if existing, exists := dataByDistrict.Get(federalDistrict); exists {

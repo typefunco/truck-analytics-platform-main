@@ -32,14 +32,14 @@ func NineMonth2024Mdt(ctx *gin.Context) {
 
 	// SQL запрос для получения данных
 	query := `
-	WITH base_data AS (
+WITH base_data AS (
     SELECT 
         "Federal_district",
         "Region",  
         "Brand",
         "City",
         SUM(CAST("Quantity" AS INTEGER)) AS total_sales -- Cast Quantity to INTEGER
-    FROM mdt_12_18_truck_analytics_10_2023
+    FROM mdt_12_18_truck_analytics_10_2024
     WHERE "Brand" IN ('DONGFENG', 'FOTON', 'HOWO', 'JAC', 'KAMAZ', 'URAL', 'DAEWOO')
     AND "Month_of_registration" <= 9  -- Filter for months <= 9
     GROUP BY "Federal_district", "Region", "City", "Brand"
@@ -216,7 +216,7 @@ ORDER BY
 		}
 
 		// Рассчитываем общий рынок
-		ta.TotalMarket = nullToZero(&ta.DONGFENG) + nullToZero(&ta.FOTON) + nullToZero(&ta.HOWO) + nullToZero(&ta.JAC) + nullToZero(&ta.KAMAZ) + nullToZero(&ta.JAC) + nullToZero(&ta.URAL) + nullToZero(&ta.DAEWOO) + nullToZero(&ta.OTHER)
+		ta.TotalMarket = nullToZero(&ta.DONGFENG) + nullToZero(&ta.FOTON) + nullToZero(&ta.HOWO) + nullToZero(&ta.JAC) + nullToZero(&ta.KAMAZ) + nullToZero(&ta.URAL) + nullToZero(&ta.DAEWOO) + nullToZero(&ta.OTHER)
 
 		// Добавляем данные о регионе в соответствующий федеральный округ
 		if existing, exists := dataByDistrict.Get(federalDistrict); exists {

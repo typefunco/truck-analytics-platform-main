@@ -206,7 +206,7 @@ ORDER BY
 		}
 
 		// Рассчитываем общий рынок
-		ta.TotalMarket = nullToZero(&ta.DONGFENG) + nullToZero(&ta.FOTON) + nullToZero(&ta.GAZ) + nullToZero(&ta.JAC) + nullToZero(&ta.ISUZU) + nullToZero(&ta.JAC) + nullToZero(&ta.KAMAZ) + nullToZero(&ta.OTHER)
+		ta.TotalMarket = nullToZero(&ta.DONGFENG) + nullToZero(&ta.FOTON) + nullToZero(&ta.GAZ) + nullToZero(&ta.JAC) + nullToZero(&ta.ISUZU) + nullToZero(&ta.KAMAZ) + nullToZero(&ta.OTHER)
 
 		// Add data to the appropriate district
 		if existing, exists := dataByDistrict.Get(federalDistrict); exists {

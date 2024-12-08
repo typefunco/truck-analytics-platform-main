@@ -282,7 +282,6 @@ document.addEventListener("DOMContentLoaded", () => {
                 row.innerHTML = `
                     <td>${region.region_name || "—"}</td>
                     <td>${region.faw || "—"}</td>
-                    <td>${region.howo || "—"}</td>
                     <td>${region.jac || "—"}</td>
                     <td>${region.sany || "—"}</td>
                     <td>${region.sitrak || "—"}</td>
