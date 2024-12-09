@@ -5,7 +5,9 @@ import (
 	"net/http"
 	"sync"
 
+	october2023 "truck-analytics-platform/internal/handlers/2023/october"
 	september2023 "truck-analytics-platform/internal/handlers/2023/september"
+	october2024 "truck-analytics-platform/internal/handlers/2024/october"
 	september2024 "truck-analytics-platform/internal/handlers/2024/september"
 
 	"github.com/gin-gonic/gin"
@@ -20,6 +22,8 @@ func InitRouter() {
 		defer wg.Done()
 		server := gin.Default()
 		server.Use(CORSMiddleware())
+
+		// 9 MONTH
 
 		// 2023
 		// Tractors
@@ -51,7 +55,7 @@ func InitRouter() {
 
 		// -----------------------
 
-		// Total market 2023
+		// Total market 9M 2023
 		server.Handle("GET", "/9m2023tractors4x2total", september2023.Tractors4x2WithTotalMarket2023)
 		server.Handle("GET", "/9m2023tractors6x4total", september2023.Tractors6x4WithTotalMarket2023)
 		server.Handle("GET", "/9m2023dumpers6x4total", september2023.Dumpers6x4WithTotalMarket2023)
@@ -61,13 +65,31 @@ func InitRouter() {
 
 		// -----------------------
 
-		// Total market 2024
+		// Total market 9M 2024
 		server.Handle("GET", "/9m2024tractors4x2total", september2024.Tractors4x2WithTotalMarket2024)
 		server.Handle("GET", "/9m2024tractors6x4total", september2024.Tractors6x4WithTotalMarket2024)
 		server.Handle("GET", "/9m2024dumpers6x4total", september2024.Dumpers6x4WithTotalMarket2024)
 		server.Handle("GET", "/9m2024dumpers8x4total", september2024.Dumpers8x4WithTotalMarket2024)
 		server.Handle("GET", "/9m2024ldttotal", september2024.NineMonth2024LDTTotal)
 		server.Handle("GET", "/9m2024mdttotal", september2024.NineMonth2024MDTTotal)
+
+		// -------------------------------------
+
+		// MDT 10M
+		server.Handle("GET", "/10m2023mdt", october2023.TenMonth2023Mdt)
+		server.Handle("GET", "/10m2023mdttotal", october2023.TenMonth2023MDTTotal)
+
+		// LDT 10M
+		server.Handle("GET", "/10m2023ldt", october2023.TenMonth2023Ldt)
+		server.Handle("GET", "/10m2023ldttotal", october2023.TenMonth2023LDTTotal)
+
+		// MDT 10M
+		server.Handle("GET", "/10m2024mdt", october2024.TenMonth2024Mdt)
+		server.Handle("GET", "/10m2024mdttotal", october2024.TenMonth2024MDTTotal)
+
+		// LDT 10M
+		server.Handle("GET", "/10m2024ldt", october2024.TenMonth2024Ldt)
+		server.Handle("GET", "/10m2024ldttotal", october2024.TenMonth2024LDTTotal)
 
 		log.Println("API server is running on port 8080...")
 		if err := http.ListenAndServe(":8080", server); err != nil {
