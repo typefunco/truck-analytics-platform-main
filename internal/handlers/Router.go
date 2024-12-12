@@ -75,21 +75,37 @@ func InitRouter() {
 
 		// -------------------------------------
 
-		// MDT 10M
+		// MDT 2023 10M
 		server.Handle("GET", "/10m2023mdt", october2023.TenMonth2023Mdt)
 		server.Handle("GET", "/10m2023mdttotal", october2023.TenMonth2023MDTTotal)
 
-		// LDT 10M
+		// LDT 2023 10M
 		server.Handle("GET", "/10m2023ldt", october2023.TenMonth2023Ldt)
 		server.Handle("GET", "/10m2023ldttotal", october2023.TenMonth2023LDTTotal)
 
-		// MDT 10M
+		// MDT 2024 10M
 		server.Handle("GET", "/10m2024mdt", october2024.TenMonth2024Mdt)
 		server.Handle("GET", "/10m2024mdttotal", october2024.TenMonth2024MDTTotal)
 
-		// LDT 10M
+		// LDT 2024 10M
 		server.Handle("GET", "/10m2024ldt", october2024.TenMonth2024Ldt)
 		server.Handle("GET", "/10m2024ldttotal", october2024.TenMonth2024LDTTotal)
+
+		// HDT 2023 10M 4x2 Tractors
+		server.Handle("GET", "/10m2023tractors4x2", october2023.TenMonth2023Tractors4x2)
+		server.Handle("GET", "/10m2023tractors4x2total", october2023.TenTractors4x2WithTotalMarket2023)
+
+		// HDT 2023 10M 6x4 Tractors
+		server.Handle("GET", "/10m2023tractors6x4", october2023.TenMonth2023Tractors6x4)
+		server.Handle("GET", "/10m2023tractors6x4total", october2023.TenTractors6x4WithTotalMarket2023)
+
+		// HDT 2023 10M 6x4 Dumpers
+		server.Handle("GET", "/10m2023dumpers6x4", october2023.TenMonth2023Dumpers6x4)
+		server.Handle("GET", "/10m2023dumpers6x4total", october2023.TenDumpers6x4WithTotalMarket2023)
+
+		// HDT 2023 10M 8x4 Dumpers
+		server.Handle("GET", "/10m2023dumpers8x4", october2023.TenMonth2023Dumpers8x4)
+		server.Handle("GET", "/10m2023dumpers8x4total", october2023.TenDumpers8x4WithTotalMarket2023)
 
 		log.Println("API server is running on port 8080...")
 		if err := http.ListenAndServe(":8080", server); err != nil {

@@ -27,7 +27,7 @@ body {
     background-color: #d9d9d9;
     border-radius: 24px;
     gap: 13px;
-    padding: 0 8px;
+    padding: 0 0px;
 }
 .header__auth-svgs {
     display: flex;
@@ -40,6 +40,17 @@ body {
 .header__auth-user {
     display: flex;
     align-items: center;
+    justify-content: center; /* Центрирует изображение, если нужно */
+    width: 100%; /* Контейнер занимает всю ширину */
+    height: 100px; /* Контейнер занимает всю высоту */
+    overflow: hidden; /* Скрывает излишки изображения */
+    border-radius: 24px; /* Сохраняет закругленные углы */
+}
+.header__auth-user img {
+    width: 250px; /* Растянуть по ширине */
+    height: 100px; /* Растянуть по высоте */
+    object-fit: cover; /* Обрезать изображение, сохраняя пропорции */
+    border-radius: inherit; /* Наследует закругленные углы от родителя */
 }
 .header__auth-user-text {
     display: flex;
