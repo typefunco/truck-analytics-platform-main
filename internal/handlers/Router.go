@@ -9,6 +9,7 @@ import (
 	september2023 "truck-analytics-platform/internal/handlers/2023/september"
 	october2024 "truck-analytics-platform/internal/handlers/2024/october"
 	september2024 "truck-analytics-platform/internal/handlers/2024/september"
+	"truck-analytics-platform/internal/handlers/utils"
 
 	"github.com/gin-gonic/gin"
 )
@@ -107,6 +108,9 @@ func InitRouter() {
 		server.Handle("GET", "/10m2023dumpers8x4", october2023.TenMonth2023Dumpers8x4)
 		server.Handle("GET", "/10m2023dumpers8x4total", october2023.TenDumpers8x4WithTotalMarket2023)
 
+		server.POST("/auth", AuthHandler)
+		server.GET("/verify-token", VerifyTokenHandler)
+
 		log.Println("API server is running on port 8080...")
 		if err := http.ListenAndServe(":8080", server); err != nil {
 			log.Fatalf("Failed to start API server: %v", err)
@@ -140,4 +144,42 @@ func CORSMiddleware() gin.HandlerFunc {
 
 		c.Next()
 	}
+}
+
+// AuthHandler обрабатывает запросы на авторизацию
+func AuthHandler(c *gin.Context) {
+	var loginData struct {
+		Login    string `json:"login" binding:"required"`
+		Password string `json:"password" binding:"required"`
+	}
+
+	if err := c.ShouldBindJSON(&loginData); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request data"})
+		return
+	}
+
+	token, err := utils.CreateJWT(loginData.Login, loginData.Password)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"token": token})
+}
+
+// VerifyTokenHandler проверяет валидность JWT токена
+func VerifyTokenHandler(c *gin.Context) {
+	token := c.GetHeader("Authorization")
+	if token == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Token is required"})
+		return
+	}
+
+	err := utils.VerifyJWT(token)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Token is valid"})
 }
