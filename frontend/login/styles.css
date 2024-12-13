@@ -1,9 +1,18 @@
-body, html {
+@font-face {
+    font-family: "FOTON";
+    src: url("./FotonType-Medium.ttf") format("truetype");
+    font-weight: 500;
+}
+* {
+    font-family: "FOTON", sans-serif;
+}
+body,
+html {
     margin: 0;
     padding: 0;
     height: 100%;
     width: 100%; /* Убираем возможные полосы */
-    font-family: Arial, sans-serif;
+
     background-color: #171f35;
     display: flex;
     justify-content: center;
@@ -84,7 +93,6 @@ button.loading::after {
     animation: spin 1s linear infinite;
 }
 
-
 button:hover {
     background-color: #187bcd;
 }
@@ -114,8 +122,12 @@ button:active {
 }
 
 @keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
 }
 
 .password-container {
@@ -142,4 +154,3 @@ button:active {
 .toggle-password:hover {
     color: #1e90ff;
 }
-

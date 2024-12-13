@@ -1,8 +1,26 @@
 body {
-    font-family: "Montserrat", sans-serif;
+    /* font-family: "Montserrat", sans-serif; */
     background-color: #171f35;
 }
+@font-face {
+    font-family: "FOTON";
+    src: url("./FotonType-Medium.ttf") format("truetype");
+    font-weight: 500;
+}
 
+@font-face {
+    font-family: "FOTON";
+    src: url("./FotonType-Bold.ttf") format("truetype");
+    font-weight: 900;
+}
+@font-face {
+    font-family: "FOTON";
+    src: url("./FotonType-Bold.ttf") format("truetype");
+    font-weight: 700;
+}
+* {
+    font-family: "FOTON", sans-serif;
+}
 .container {
     max-width: 1770px;
     padding: 0 20px;
