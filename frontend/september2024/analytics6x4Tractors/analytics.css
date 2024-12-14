@@ -21,6 +21,18 @@ body {
 * {
     font-family: "FOTON", sans-serif;
 }
+.district-row td {
+    font-size: 13px !important;
+}
+.brand-row td {
+    font-size: 13px !important;
+}
+.data-row td:nth-child(2) {
+    background-color: rgba(95, 186, 119, 0.691);
+}
+.brand-row td:nth-child(2) {
+    background-color: rgba(95, 186, 119, 0.691);
+}
 .container {
     max-width: 1770px;
     padding: 0 20px;
@@ -142,7 +154,6 @@ body {
     background-color: #464f6b;
 }
 
-
 .pie-chart-container {
     display: flex;
     flex-direction: column;
@@ -166,7 +177,7 @@ body {
     text-align: center;
 }
 
-.pos canvas:last-child{
+.pos canvas:last-child {
     margin-top: 50px;
     margin-left: 250px;
     margin-bottom: 50px;

@@ -27,6 +27,14 @@ body {
     margin: 0 auto;
 }
 
+.district-row td {
+    font-size: 13px !important;
+}
+.brand-row td {
+    font-size: 13px !important;
+}
+
+
 .header {
     display: flex;
     align-items: center;
@@ -142,7 +150,6 @@ body {
     background-color: #464f6b;
 }
 
-
 .pie-chart-container {
     display: flex;
     flex-direction: column;
@@ -166,7 +173,7 @@ body {
     text-align: center;
 }
 
-.pos canvas:last-child{
+.pos canvas:last-child {
     margin-top: 50px;
     margin-left: 250px;
     margin-bottom: 50px;
