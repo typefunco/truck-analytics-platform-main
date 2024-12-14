@@ -18,6 +18,41 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
+    // Функция для получения значения куки по имени
+    function getCookies() {
+        const cookies = {};
+        const cookieArr = document.cookie.split(";");
+
+        cookieArr.forEach((cookie) => {
+            const [key, value] = cookie.split("=").map((c) => c.trim());
+            cookies[key] = value;
+        });
+
+        return cookies;
+    }
+
+    // Чтение всех куков один раз
+    const allCookies = getCookies();
+    const curCookies = allCookies.token;
+
+    fetch("http://localhost:8080/verify-token", {
+        method: "GET", // или POST, если это POST-запрос
+        headers: {
+            Authorization: `${curCookies}`,
+            "Content-Type": "application/json", // если тело запроса в формате JSON
+        },
+    })
+        .then((response) => response.json()) // предполагаем, что сервер вернет JSON
+        .then((data) => {
+            if (data.error) {
+                console.log(data.error);
+
+                window.location.href = "http://localhost/login";
+            }
+        })
+        .catch((error) => {
+            console.log(error);
+        });
 
     // Функция для создания горизонтального графика по регионам
     // Подключаем DataLabels плагин для текста на барах
@@ -32,46 +67,56 @@ document.addEventListener("DOMContentLoaded", () => {
         title.style.textAlign = "center";
         title.style.margin = "10px 0";
         cell.appendChild(title);
-    
+
         // Контейнер для графиков
         const chartWrapper = document.createElement("div");
-        chartWrapper.style.display = "flex";  // Размещение в ряд
+        chartWrapper.style.display = "flex"; // Размещение в ряд
         chartWrapper.style.justifyContent = "space-between";
         chartWrapper.style.marginBottom = "0px";
         cell.appendChild(chartWrapper);
-    
+
         // Горизонтальный bar chart
         const barChartContainer = document.createElement("div");
         barChartContainer.style.flex = "1"; // Это гарантирует, что bar chart будет занимать доступное место
         chartWrapper.appendChild(barChartContainer);
-    
+
         const margin = { top: 20, right: 150, bottom: 50, left: 150 };
         const width = 800 - margin.left - margin.right;
         const height = 400 - margin.top - margin.bottom;
-    
-        const svg = d3.select(barChartContainer)
+
+        const svg = d3
+            .select(barChartContainer)
             .append("svg")
             .attr("width", width + margin.left + margin.right)
             .attr("height", height + margin.top + margin.bottom)
             .append("g")
             .attr("transform", `translate(${margin.left},${margin.top})`);
-    
+
         // Список брендов и цвета
-        const brands = ["dongfeng", "howo", "foton", "jac", "kamaz", "ural", "daewoo", "other"];
+        const brands = [
+            "dongfeng",
+            "howo",
+            "foton",
+            "jac",
+            "kamaz",
+            "ural",
+            "daewoo",
+            "other",
+        ];
         const brandColors = {
             dongfeng: "#FF0000",
             howo: "#8B4513",
             foton: "#002BFF",
             jac: "#EA00FF",
-            kamaz: "#B8860B",   // Золотой
-            ural: "#FF69B4",    // Розовый
-            daewoo: "#2F4F4F",  // Шоколадный
-            other: "#708090"    // Серо-голубой (slate gray)
+            kamaz: "#B8860B", // Золотой
+            ural: "#FF69B4", // Розовый
+            daewoo: "#2F4F4F", // Шоколадный
+            other: "#708090", // Серо-голубой (slate gray)
         };
-    
+
         // Фильтрация данных
         const filteredData = regions;
-    
+
         // Обработка данных
         const processedData = filteredData.map((d) => {
             const total = d.total || 1;
@@ -81,20 +126,22 @@ document.addEventListener("DOMContentLoaded", () => {
                 ...brands.reduce((acc, brand) => {
                     acc[brand] = d[brand] || 0;
                     return acc;
-                }, {})
+                }, {}),
             };
         });
-    
+
         // Масштабы
-        const y = d3.scaleBand()
+        const y = d3
+            .scaleBand()
             .domain(processedData.map((d) => d.region_name))
             .range([0, height])
             .padding(0.1);
-    
-        const x = d3.scaleLinear()
+
+        const x = d3
+            .scaleLinear()
             .domain([0, 1]) // Нормализованный масштаб
             .range([0, width]);
-    
+
         // Отрисовка stacked bar chart
         svg.append("g")
             .selectAll("g")
@@ -109,7 +156,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     brand,
                     value: d[brand] / total,
                     count: d[brand],
-                    region: d.region_name
+                    region: d.region_name,
                 }));
             })
             .enter()
@@ -117,7 +164,9 @@ document.addEventListener("DOMContentLoaded", () => {
             .attr("x", (d, i, nodes) => {
                 const previousValues = d3.sum(
                     brands.slice(0, brands.indexOf(d.brand)),
-                    (brand) => d3.select(nodes[i].parentNode).data()[0][brand] / d3.select(nodes[i].parentNode).data()[0].total || 0
+                    (brand) =>
+                        d3.select(nodes[i].parentNode).data()[0][brand] /
+                            d3.select(nodes[i].parentNode).data()[0].total || 0
                 );
                 return x(previousValues);
             })
@@ -127,7 +176,7 @@ document.addEventListener("DOMContentLoaded", () => {
             .attr("fill", (d) => brandColors[d.brand])
             .append("title")
             .text((d) => `${d.region} - ${d.brand}: ${d.count} продаж`);
-    
+
         // Добавление текста с названиями регионов для bar chart
         svg.append("g")
             .selectAll("g")
@@ -136,14 +185,16 @@ document.addEventListener("DOMContentLoaded", () => {
             .append("g")
             .attr("transform", (d) => `translate(0, ${y(d.region_name)})`)
             .append("text")
-            .attr("x", -5)  // Сдвигаем текст слева от бара
+            .attr("x", -5) // Сдвигаем текст слева от бара
             .attr("y", y.bandwidth() / 2)
             .attr("dy", ".35em")
             .attr("fill", "white")
             .style("text-anchor", "end")
-            .style("font-size", (d) => d.region_name.length > 20 ? "8px" : "12px")  // Уменьшаем шрифт для длинных названий
+            .style("font-size", (d) =>
+                d.region_name.length > 20 ? "8px" : "12px"
+            ) // Уменьшаем шрифт для длинных названий
             .text((d) => d.region_name);
-    
+
         // Добавление текста с продажами, только если значение > 5%
         svg.append("g")
             .selectAll("g")
@@ -158,7 +209,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     brand,
                     value: d[brand] / total,
                     count: d[brand],
-                    region: d.region_name
+                    region: d.region_name,
                 }));
             })
             .enter()
@@ -166,7 +217,9 @@ document.addEventListener("DOMContentLoaded", () => {
             .attr("x", (d, i, nodes) => {
                 const previousValues = d3.sum(
                     brands.slice(0, brands.indexOf(d.brand)),
-                    (brand) => d3.select(nodes[i].parentNode).data()[0][brand] / d3.select(nodes[i].parentNode).data()[0].total || 0
+                    (brand) =>
+                        d3.select(nodes[i].parentNode).data()[0][brand] /
+                            d3.select(nodes[i].parentNode).data()[0].total || 0
                 );
                 return x(previousValues + d.value / 2);
             })
@@ -180,48 +233,54 @@ document.addEventListener("DOMContentLoaded", () => {
                 const percentage = (d.count / total) * 100;
                 return percentage >= 5 ? d.count : ""; // Показываем только если значение > 5%
             });
-    
+
         // Добавление легенды для bar chart
-        const legend = svg.append("g")
+        const legend = svg
+            .append("g")
             .attr("transform", `translate(${width + 20}, 0)`);
-    
+
         brands.forEach((brand, i) => {
-            legend.append("rect")
+            legend
+                .append("rect")
                 .attr("x", 0)
                 .attr("y", i * 20)
                 .attr("width", 18)
                 .attr("height", 18)
                 .style("fill", brandColors[brand]);
-    
-            legend.append("text")
+
+            legend
+                .append("text")
                 .attr("x", 24)
                 .attr("y", i * 20 + 9)
                 .attr("dy", ".35em")
                 .style("fill", "white")
                 .text(brand);
         });
-    
+
         // Отрисовка Pie Chart
         const totalMarketData = brands.map((brand) => {
             return {
                 brand,
-                value: d3.sum(filteredData, (d) => d[brand] || 0)
+                value: d3.sum(filteredData, (d) => d[brand] || 0),
             };
         });
-    
+
         const totalSales = d3.sum(totalMarketData, (d) => d.value);
-    
+
         const pie = d3.pie().value((d) => d.value);
         const arc = d3.arc().innerRadius(0).outerRadius(150);
-    
-        const svgPie = d3.select(cell).append("svg")
+
+        const svgPie = d3
+            .select(cell)
+            .append("svg")
             .attr("width", 400)
             .attr("height", 400)
             .append("g")
             .attr("transform", `translate(200, 200)`);
-    
+
         // Отрисовка сегментов на Pie Chart
-        svgPie.selectAll("path")
+        svgPie
+            .selectAll("path")
             .data(pie(totalMarketData))
             .enter()
             .append("path")
@@ -234,9 +293,10 @@ document.addEventListener("DOMContentLoaded", () => {
                 const percentage = (d.data.value / totalSales) * 100;
                 return `${d.data.brand}: ${percentage.toFixed(1)}%`;
             });
-    
+
         // Отображение процентов на Pie Chart
-        svgPie.selectAll("text")
+        svgPie
+            .selectAll("text")
             .data(pie(totalMarketData))
             .enter()
             .append("text")
@@ -249,28 +309,25 @@ document.addEventListener("DOMContentLoaded", () => {
                 const percentage = (d.data.value / totalSales) * 100;
                 return percentage >= 5 ? `${percentage.toFixed(1)}%` : "";
             });
-    
     }
-    
-    
-        
+
     // Обновляем populateTable для графиков по регионам
     function populateTable(data, year) {
         const tableBody = document.querySelector(`#data-table-${year} tbody`);
         tableBody.innerHTML = "";
-    
+
         if (!data || !data.data) return;
-    
+
         const districts = Object.entries(data.data).slice(0);
-    
+
         for (const [district, regions] of districts) {
             const columnCount = 10; // Убедитесь, что это соответствует количеству столбцов
-    
+
             const districtRow = document.createElement("tr");
             districtRow.classList.add("district-row");
             districtRow.innerHTML = `<td colspan="${columnCount}"><strong>${district}</strong></td>`;
             tableBody.appendChild(districtRow);
-    
+
             const brandRow = document.createElement("tr");
             brandRow.classList.add("brand-row");
             brandRow.innerHTML = `
@@ -286,7 +343,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 <td><em>TOTAL MARKET</em></td>
             `;
             tableBody.appendChild(brandRow);
-    
+
             regions.forEach((region) => {
                 const row = document.createElement("tr");
                 row.classList.add("data-row");
@@ -304,19 +361,18 @@ document.addEventListener("DOMContentLoaded", () => {
                 `;
                 tableBody.appendChild(row);
             });
-    
+
             const chartRow = document.createElement("tr");
             const chartCell = document.createElement("td");
             chartCell.setAttribute("colspan", `${columnCount}`);
             chartCell.classList.add("pos");
             chartRow.appendChild(chartCell);
             tableBody.appendChild(chartRow);
-    
+
             createRegionalChart(chartCell, regions, district);
         }
-        console.log('Styles applied to district and brand rows');
+        console.log("Styles applied to district and brand rows");
     }
-    
 
     // Вызываем fetchData для каждого года
     fetchData("2023");

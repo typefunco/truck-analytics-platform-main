@@ -28,9 +28,9 @@ document.addEventListener("DOMContentLoaded", () => {
                 loginButton.classList.remove("loading");
                 loginButton.textContent = "Login";
                 if (data.error) {
-                    alert("none");
+                    alert("Wrong password or login");
                 } else {
-                    document.cookie = `token=${data.token}`;
+                    document.cookie = `token=${data.token}; path=/; domain=localhost`;
                     window.location.href = "http://localhost/";
                 }
             })

@@ -17,6 +17,41 @@ document.addEventListener("DOMContentLoaded", () => {
             );
         }
     }
+    // Функция для получения значения куки по имени
+    function getCookies() {
+        const cookies = {};
+        const cookieArr = document.cookie.split(";");
+
+        cookieArr.forEach((cookie) => {
+            const [key, value] = cookie.split("=").map((c) => c.trim());
+            cookies[key] = value;
+        });
+
+        return cookies;
+    }
+
+    // Чтение всех куков один раз
+    const allCookies = getCookies();
+    const curCookies = allCookies.token;
+
+    fetch("http://localhost:8080/verify-token", {
+        method: "GET", // или POST, если это POST-запрос
+        headers: {
+            Authorization: `${curCookies}`,
+            "Content-Type": "application/json", // если тело запроса в формате JSON
+        },
+    })
+        .then((response) => response.json()) // предполагаем, что сервер вернет JSON
+        .then((data) => {
+            if (data.error) {
+                console.log(data.error);
+
+                window.location.href = "http://localhost/login";
+            }
+        })
+        .catch((error) => {
+            console.log(error);
+        });
 
     // Функция для создания графиков
     Chart.register(ChartDataLabels);

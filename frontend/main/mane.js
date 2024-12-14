@@ -8,10 +8,46 @@ const form5 = document.querySelector(".filter__form-period");
 // Находим все кнопки в сегменте
 const segmentButtons = form1.querySelectorAll("input[name='segment']");
 
+// Функция для получения значения куки по имени
+function getCookies() {
+    const cookies = {};
+    const cookieArr = document.cookie.split(";");
+
+    cookieArr.forEach((cookie) => {
+        const [key, value] = cookie.split("=").map((c) => c.trim());
+        cookies[key] = value;
+    });
+
+    return cookies;
+}
+
+// Чтение всех куков один раз
+const allCookies = getCookies();
+const curCookies = allCookies.token;
+
+fetch("http://localhost:8080/verify-token", {
+    method: "GET", // или POST, если это POST-запрос
+    headers: {
+        Authorization: `${curCookies}`,
+        "Content-Type": "application/json", // если тело запроса в формате JSON
+    },
+})
+    .then((response) => response.json()) // предполагаем, что сервер вернет JSON
+    .then((data) => {
+        if (data.error) {
+            console.log(data.error);
+
+            window.location.href = "http://localhost/login";
+        }
+    })
+    .catch((error) => {
+        console.log(error);
+    });
+
 segmentButtons.forEach((btn) => {
     btn.addEventListener("change", (e) => {
         const selectedSegment = e.target.value; // Получаем выбранное значение сегмента
-        console.log('Selected segment:', selectedSegment); // Логируем выбранное значение сегмента
+        console.log("Selected segment:", selectedSegment); // Логируем выбранное значение сегмента
 
         // Убираем все классы отображения
         form2.classList.add("hidden");
@@ -58,13 +94,13 @@ truckTypeInputs.forEach((input) => {
         // Включаем/выключаем оси в зависимости от типа грузовика
         if (truckType === "Tractors") {
             // Если выбран "Tractors", то ось 8x4 заблокирована, а 4x2 и 6x4 доступны
-            document.querySelector('input[value="8x4"]').disabled = true;  // Блокируем ось 8x4
+            document.querySelector('input[value="8x4"]').disabled = true; // Блокируем ось 8x4
             document.querySelector('input[value="4x2"]').disabled = false; // Разблокируем ось 4x2
             document.querySelector('input[value="6x4"]').disabled = false; // Разблокируем ось 6x4
         } else if (truckType === "Heavy chassis") {
             // Если выбран "Heavy chassis", то ось 4x2 заблокирована, а 6x4 и 8x4 доступны
             document.querySelector('input[value="8x4"]').disabled = false; // Разблокируем ось 8x4
-            document.querySelector('input[value="4x2"]').disabled = true;  // Блокируем ось 4x2
+            document.querySelector('input[value="4x2"]').disabled = true; // Блокируем ось 4x2
             document.querySelector('input[value="6x4"]').disabled = false; // Разблокируем ось 6x4
         } else {
             // Если выбран другой тип (например, None), блокируем все оси
@@ -80,82 +116,121 @@ const redirectBtn = document.querySelector(".filter-btn");
 redirectBtn.addEventListener("click", (e) => {
     e.preventDefault();
 
-    const truckTypeInput = document.querySelector('input[name="truck-type"]:checked');
-    const axleTypeInput = document.querySelector('input[name="axle-type"]:checked');
-    const regionsType = document.querySelector('input[name="regions"]:checked').dataset.value;
+    const truckTypeInput = document.querySelector(
+        'input[name="truck-type"]:checked'
+    );
+    const axleTypeInput = document.querySelector(
+        'input[name="axle-type"]:checked'
+    );
+    const regionsType = document.querySelector('input[name="regions"]:checked')
+        .dataset.value;
+
+    const periodType = document.querySelector('input[name="month"]:checked')
+        .dataset.value;
 
     const truckType = truckTypeInput ? truckTypeInput.dataset.value : null;
     const axleType = axleTypeInput ? axleTypeInput.dataset.value : null;
 
     // Логика перенаправления для MDT и LDT
-    const selectedSegment = document.querySelector('input[name="segment"]:checked').value;
+    const selectedSegment = document.querySelector(
+        'input[name="segment"]:checked'
+    ).value;
 
-    if (
-        selectedSegment === "MDT" &&
-        regionsType === "Total Market"
-    ) {
-        window.location.href = `/september2024/mdtTotal/analytics4x2.html`;
-    } else if (
-        selectedSegment === "MDT" &&
-        regionsType === "All regions"
-    ) {
-        window.location.href = `/september2024/mdt/analytics4x2.html`;
-    } else if (
-        selectedSegment === "LDT" &&
-        regionsType === "Total Market")  {
+    if (selectedSegment === "MDT" && regionsType === "Total Market") {
+        if (periodType == "9m") {
+            window.location.href = `/september2024/mdtTotal/analytics4x2.html`;
+        } else {
+            window.location.href = `/october2024/mdtTotal/analytics4x2.html`;
+        }
+    } else if (selectedSegment === "MDT" && regionsType === "All regions") {
+        if (periodType == "9m") {
+            window.location.href = `/september2024/mdt/analytics4x2.html`;
+        } else {
+            window.location.href = `/october2024/mdt/analytics4x2.html`;
+        }
+    } else if (selectedSegment === "LDT" && regionsType === "Total Market") {
+        if (periodType == "9m") {
+            window.location.href = `/september2024/ldtTotal/analytics4x2.html`;
+        } else {
+            window.location.href = `/october2024/ldtTotal/analytics4x2.html`;
+        }
         // Для LDT перенаправление
-        window.location.href = `/september2024/ldtTotal/analytics4x2.html`;
-    } else if (
-        selectedSegment === "LDT" &&
-        regionsType === "All regions") 
-        {
-        window.location.href = `/september2024/ldt/analytics4x2.html`;
+    } else if (selectedSegment === "LDT" && regionsType === "All regions") {
+        if (periodType == "9m") {
+            window.location.href = `/september2024/ldt/analytics4x2.html`;
+        } else {
+            window.location.href = `/october2024/ldt/analytics4x2.html`;
+        }
     } else if (selectedSegment === "HDT") {
         // Логика для HDT (Heavy chassis)
         if (truckType === "Heavy chassis") {
-            if (
-                axleType === "6x4" &&
-                regionsType === "All regions"
-            ) {
-                window.location.href = "/september2024/analytics6x4Dumpers/analytics6x4.html";
-            } else if (
-                axleType === "6x4" &&
-                regionsType === "Total Market"
-            ) {
-                window.location.href = "/september2024/analytics6x4DumpersTotalMarket/analytics6x4.html";
-            } else if (
-                axleType === "8x4" &&
-                regionsType === "All regions"
-            ) {
-                window.location.href = "/september2024/analytics8x4Dumpers/analytics8x4.html";
-            } else if (
-                axleType === "8x4" &&
-                regionsType === "Total Market"
-            ) {
-                window.location.href = "/september2024/analytics8x4DumpersTotalMarket/analytics8x4.html";
+            if (axleType === "6x4" && regionsType === "All regions") {
+                if (periodType == "9m") {
+                    window.location.href =
+                        "/september2024/analytics6x4Dumpers/analytics6x4.html";
+                } else {
+                    window.location.href =
+                        "/october2024/analytics6x4Dumpers/analytics6x4.html";
+                }
+            } else if (axleType === "6x4" && regionsType === "Total Market") {
+                if (periodType == "9m") {
+                    window.location.href =
+                        "/september2024/analytics6x4DumpersTotalMarket/analytics6x4.html";
+                } else {
+                    window.location.href =
+                        "/october2024/analytics6x4DumpersTotalMarket/analytics6x4.html";
+                }
+            } else if (axleType === "8x4" && regionsType === "All regions") {
+                if (periodType == "9m") {
+                    window.location.href =
+                        "/september2024/analytics8x4Dumpers/analytics8x4.html";
+                } else {
+                    window.location.href =
+                        "/october2024/analytics8x4Dumpers/analytics8x4.html";
+                }
+            } else if (axleType === "8x4" && regionsType === "Total Market") {
+                if (periodType == "9m") {
+                    window.location.href =
+                        "/september2024/analytics8x4DumpersTotalMarket/analytics8x4.html";
+                } else {
+                    window.location.href =
+                        "/october2024/analytics8x4DumpersTotalMarket/analytics8x4.html";
+                }
             }
         } else if (truckType === "Tractors") {
             // Логика для тракторов
-            if (
-                axleType === "4x2" &&
-                regionsType === "All regions"
-            ) {
-                window.location.href = "/september2024/analytics4x2Tractors/analytics4x2.html";
-            } else if (
-                axleType === "4x2" &&
-                regionsType === "Total Market"
-            ) {
-                window.location.href = "/september2024/analytics4x2TractorsTotalMarket/analytics4x2.html";
-            } else if (
-                axleType === "6x4" &&
-                regionsType === "Total Market"
-            ) {
-                window.location.href = "/september2024/analytics6x4TractorsTotalMarket/analytics6x4.html";
-            } else if (
-                axleType === "6x4" &&
-                regionsType === "All regions"
-            ) {
-                window.location.href = "/september2024/analytics6x4Tractors/analytics6x4.html";
+            if (axleType === "4x2" && regionsType === "All regions") {
+                if (periodType == "9m") {
+                    window.location.href =
+                        "/september2024/analytics4x2Tractors/analytics4x2.html";
+                } else {
+                    window.location.href =
+                        "/october2024/analytics4x2Tractors/analytics4x2.html";
+                }
+            } else if (axleType === "4x2" && regionsType === "Total Market") {
+                if (periodType == "9m") {
+                    window.location.href =
+                        "/september2024/analytics4x2TractorsTotalMarket/analytics4x2.html";
+                } else {
+                    window.location.href =
+                        "/october2024/analytics4x2TractorsTotalMarket/analytics4x2.html";
+                }
+            } else if (axleType === "6x4" && regionsType === "Total Market") {
+                if (periodType == "9m") {
+                    window.location.href =
+                        "/september2024/analytics6x4TractorsTotalMarket/analytics6x4.html";
+                } else {
+                    window.location.href =
+                        "/october2024/analytics6x4TractorsTotalMarket/analytics6x4.html";
+                }
+            } else if (axleType === "6x4" && regionsType === "All regions") {
+                if (periodType == "9m") {
+                    window.location.href =
+                        "/september2024/analytics6x4Tractors/analytics6x4.html";
+                } else {
+                    window.location.href =
+                        "/october2024/analytics6x4Tractors/analytics6x4.html";
+                }
             }
         }
     }

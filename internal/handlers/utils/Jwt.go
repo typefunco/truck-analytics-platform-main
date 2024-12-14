@@ -12,7 +12,7 @@ var secretKey = []byte("5OGMnhB3g7<JeJzr+EesQ};0U_9sJOIO")
 
 func CreateJWT(login string, password string) (string, error) {
 
-	if login == "foton-trucks" || password == "foton1996" {
+	if login == "foton-trucks" && password == "foton1996" {
 		token := jwt.NewWithClaims(jwt.SigningMethodHS256,
 			jwt.MapClaims{
 				"login": login,
